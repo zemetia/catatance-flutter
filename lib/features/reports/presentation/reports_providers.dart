@@ -79,3 +79,23 @@ final monthlyTrendProvider =
         monthsCount: monthSelectorSpan,
       );
 });
+
+/// Current calendar month's total income (for dashboard and summaries).
+final thisMonthIncomeProvider = StreamProvider.autoDispose<int>((ref) {
+  final now = DateTime.now();
+  final start = DateTime(now.year, now.month);
+  final endExclusive = DateTime(now.year, now.month + 1);
+  return ref
+      .watch(reportsRepositoryProvider)
+      .watchTotalIncome(start, endExclusive);
+});
+
+/// Current calendar month's total expense (for dashboard and summaries).
+final thisMonthExpenseProvider = StreamProvider.autoDispose<int>((ref) {
+  final now = DateTime.now();
+  final start = DateTime(now.year, now.month);
+  final endExclusive = DateTime(now.year, now.month + 1);
+  return ref
+      .watch(reportsRepositoryProvider)
+      .watchTotalExpense(start, endExclusive);
+});

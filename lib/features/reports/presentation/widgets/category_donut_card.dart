@@ -58,18 +58,18 @@ class _DonutBody extends StatelessWidget {
 
   final List<CategorySpending> items;
 
-  static const _palette = [
-    Color(0xFF3D7FFF),
-    Color(0xFF2FB8A6),
-    Color(0xFFFF8A3D),
-    Color(0xFFB57BFF),
-    Color(0xFFFF6B9A),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    final palette = [
+      scheme.primary,
+      scheme.secondary,
+      scheme.tertiary,
+      const Color(0xFFB57BFF),
+      const Color(0xFFFF6B9A),
+    ];
 
     if (items.isEmpty) {
       return SizedBox(
@@ -100,7 +100,7 @@ class _DonutBody extends StatelessWidget {
                     for (var i = 0; i < items.length; i++)
                       PieChartSectionData(
                         value: items[i].totalCents.toDouble(),
-                        color: _palette[i % _palette.length],
+                        color: palette[i % palette.length],
                         radius: 20,
                         showTitle: false,
                       ),
@@ -137,7 +137,7 @@ class _DonutBody extends StatelessWidget {
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: _palette[i % _palette.length],
+                          color: palette[i % palette.length],
                           shape: BoxShape.circle,
                         ),
                       ),

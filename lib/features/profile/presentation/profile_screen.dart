@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/theme_providers.dart';
 import '../../../core/widgets/widgets.dart';
+import 'profile_settings_providers.dart';
 import 'widgets/profile_balance_card.dart';
 import 'widgets/profile_header_card.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   void _comingSoon(BuildContext context, String label) {
@@ -44,31 +48,40 @@ class ProfileScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeSettings = ref.watch(themeSettingsProvider);
+    final modeLabel = switch (themeSettings.themeMode) {
+      ThemeMode.dark => 'Gelap',
+      ThemeMode.light => 'Terang',
+      ThemeMode.system => 'Sistem',
+    };
+    final profile = ref.watch(userProfileProvider);
+    final language = ref.watch(appLanguageProvider);
+
     final accountItems = [
       MenuSectionItem(
         icon: LucideIcons.user,
         label: 'Akun',
         description: 'Data diri dan info akunmu',
-        onTap: () => _comingSoon(context, 'Akun'),
+        onTap: () => context.push('/profile/account'),
       ),
       MenuSectionItem(
         icon: LucideIcons.sliders_horizontal,
         label: 'Preferensi',
         description: 'Atur mata uang dan format angka',
-        onTap: () => _comingSoon(context, 'Preferensi'),
+        onTap: () => context.push('/profile/preferences'),
       ),
       MenuSectionItem(
         icon: LucideIcons.bell,
         label: 'Notifikasi',
         description: 'Kelola pengingat dan pemberitahuan',
-        onTap: () => _comingSoon(context, 'Notifikasi'),
+        onTap: () => context.push('/profile/notifications'),
       ),
       MenuSectionItem(
         icon: LucideIcons.shield_check,
         label: 'Keamanan',
         description: 'PIN, biometrik, dan proteksi akun',
-        onTap: () => _comingSoon(context, 'Keamanan'),
+        onTap: () => context.push('/profile/security'),
       ),
       MenuSectionItem(
         icon: LucideIcons.database,
@@ -80,16 +93,16 @@ class ProfileScreen extends StatelessWidget {
 
     final appearanceItems = [
       MenuSectionItem(
-        icon: LucideIcons.moon,
+        icon: LucideIcons.palette,
         label: 'Tema',
-        description: 'Mode terang, gelap, atau ikuti sistem',
-        onTap: () => _comingSoon(context, 'Tema'),
+        description: '${themeSettings.colorTheme.label} • $modeLabel',
+        onTap: () => context.push('/settings/theme'),
       ),
       MenuSectionItem(
         icon: LucideIcons.languages,
         label: 'Bahasa',
-        description: 'Ubah bahasa tampilan aplikasi',
-        onTap: () => _comingSoon(context, 'Bahasa'),
+        description: language.label,
+        onTap: () => context.push('/profile/language'),
       ),
       MenuSectionItem(
         icon: LucideIcons.layout_grid,
@@ -110,7 +123,7 @@ class ProfileScreen extends StatelessWidget {
         icon: LucideIcons.wallet,
         label: 'Semua Dompet',
         description: 'Lihat dan kelola semua dompetmu',
-        onTap: () => _comingSoon(context, 'Semua Dompet'),
+        onTap: () => context.push('/wallets'),
       ),
       MenuSectionItem(
         icon: LucideIcons.chart_pie,
@@ -185,31 +198,31 @@ class ProfileScreen extends StatelessWidget {
         icon: LucideIcons.life_buoy,
         label: 'Bantuan',
         description: 'Pusat bantuan dan pertanyaan umum',
-        onTap: () => _comingSoon(context, 'Bantuan'),
+        onTap: () => context.push('/profile/help'),
       ),
       MenuSectionItem(
         icon: LucideIcons.info,
         label: 'Tentang Aplikasi',
         description: 'Versi aplikasi dan info pengembang',
-        onTap: () => _comingSoon(context, 'Tentang Aplikasi'),
+        onTap: () => context.push('/profile/about'),
       ),
       MenuSectionItem(
         icon: LucideIcons.file_text,
         label: 'Kebijakan Privasi',
         description: 'Cara kami menjaga data pribadimu',
-        onTap: () => _comingSoon(context, 'Kebijakan Privasi'),
+        onTap: () => context.push('/profile/privacy-policy'),
       ),
       MenuSectionItem(
         icon: LucideIcons.file_text,
         label: 'Syarat & Ketentuan',
         description: 'Ketentuan penggunaan aplikasi',
-        onTap: () => _comingSoon(context, 'Syarat & Ketentuan'),
+        onTap: () => context.push('/profile/terms'),
       ),
       MenuSectionItem(
         icon: LucideIcons.message_square,
         label: 'Kirim Masukan',
         description: 'Sampaikan saran atau laporkan bug',
-        onTap: () => _comingSoon(context, 'Kirim Masukan'),
+        onTap: () => context.push('/profile/feedback'),
       ),
     ];
 
@@ -231,15 +244,15 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             ProfileHeaderCard(
-              displayName: 'Pengguna',
-              email: 'pengguna@email.com',
-              onEditTap: () => _comingSoon(context, 'Edit profil'),
+              displayName: profile.displayName,
+              email: profile.email,
+              onEditTap: () => context.push('/profile/account'),
             ),
             const SizedBox(height: AppSpacing.md),
             ProfileBalanceCard(
               balanceCents: 0,
               walletCount: 1,
-              onTap: () => _comingSoon(context, 'Semua Dompet'),
+              onTap: () => context.push('/wallets'),
             ),
             const SizedBox(height: AppSpacing.lg),
             MenuSection(

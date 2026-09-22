@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/widgets.dart';
@@ -15,9 +16,8 @@ class BudgetScreen extends ConsumerWidget {
   const BudgetScreen({super.key});
 
   void _comingSoon(BuildContext context, String label) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label segera hadir')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$label segera hadir')));
   }
 
   @override
@@ -50,12 +50,16 @@ class BudgetScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'Anggaran',
-                        style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+                        style: textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         '$periodLabel • ${budgets.length} aktif',
-                        style: textTheme.bodyMedium?.copyWith(color: scheme.outline),
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: scheme.outline,
+                        ),
                       ),
                     ],
                   ),
@@ -72,7 +76,8 @@ class BudgetScreen extends ConsumerWidget {
               const EmptyStateCard(
                 icon: LucideIcons.piggy_bank,
                 title: 'Belum ada anggaran',
-                description: 'Belum ada anggaran aktif. Buat dulu di tab Anggaran.',
+                description:
+                    'Belum ada anggaran aktif. Buat dulu di tab Anggaran.',
               )
             else
               for (var i = 0; i < budgets.length; i++) ...[
@@ -106,8 +111,8 @@ class BudgetScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             BudgetSectionHeader(
               title: 'Dompet',
-              onAdd: () => _comingSoon(context, 'Tambah dompet'),
-              onSeeAll: () => _comingSoon(context, 'Daftar dompet'),
+              onAdd: () => context.push('/wallets/new'),
+              onSeeAll: () => context.push('/wallets'),
             ),
             const SizedBox(height: AppSpacing.sm),
             if (accounts.isEmpty)
@@ -120,7 +125,7 @@ class BudgetScreen extends ConsumerWidget {
               WalletSummaryCard(
                 accounts: accounts,
                 totalBalanceCents: totalBalance,
-                onAccountTap: (account) => _comingSoon(context, account.name),
+                onAccountTap: (account) => context.push('/wallets'),
               ),
           ],
         ),

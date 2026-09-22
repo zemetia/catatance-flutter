@@ -49,7 +49,10 @@ lib/
 │   ├── accounts/
 │   │   ├── data/                  # account_repository.dart
 │   │   ├── domain/                # account.dart (freezed)
-│   │   └── presentation/          # account_providers.dart only; no screen yet
+│   │   └── presentation/          # account_providers.dart, wallet_list_screen.dart
+│   │       │                      # ("Semua dompet"), wallet_form_screen.dart
+│   │       │                      # ("Dompet baru"), wallet_transfer_screen.dart
+│   │       └── widgets/           # amount_keypad.dart, wallet_picker_sheet.dart
 │   ├── budget/
 │   │   └── presentation/          # budget_screen.dart, budget_providers.dart
 │   │       └── widgets/           # progress/goal/wallet summary cards
@@ -78,6 +81,6 @@ test/
 
 - `transactions/data/` and `transactions/domain/` are empty — transaction screens currently have no repository or freezed model backing them yet.
 - `categories/` has no implementation at all (empty `data/`, `domain/`, `presentation/`).
-- `accounts/presentation/` has providers but no screen.
-- `test/` has only the default `widget_test.dart` — no feature-level widget or unit tests yet, despite the mirrored structure described above being the target layout.
+- `accounts/presentation/` now has wallet screens (list/new/transfer) but no edit-wallet screen yet.
+- `test/database/` and `test/features/` have real repository/database tests; `test/widget_test.dart` is a stale default smoke test (looks for old placeholder text/`NavigationBar`) that predates the current shell UI and currently fails — needs updating to match `AppShell`/`FloatingNavBar`, not a regression from any single feature change.
 - `app_typography.dart` and `constants/app_constants.dart` referenced in earlier drafts of this doc do not exist in `core/theme/` / `core/constants/` — typography lives inline in `app_theme.dart` via `google_fonts`, and there is no `core/constants/` folder yet.

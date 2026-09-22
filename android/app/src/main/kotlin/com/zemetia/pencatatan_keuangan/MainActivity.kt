@@ -1,4 +1,4 @@
-package com.zymermusic.pencatatan_keuangan
+package com.zemetia.pencatatan_keuangan
 
 import io.flutter.embedding.android.FlutterActivity
 

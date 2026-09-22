@@ -65,6 +65,17 @@ class ReportsRepository {
     });
   }
 
+  /// Total income in `[start, endExclusive)`.
+  Stream<int> watchTotalIncome(DateTime start, DateTime endExclusive) {
+    return _watchIncomeRows(start, endExclusive).map((rows) {
+      var total = 0;
+      for (final row in rows) {
+        total += row.readTable(_db.transactions).amountCents;
+      }
+      return total;
+    });
+  }
+
   /// Expense grouped by category in `[start, endExclusive)`, sorted by
   /// total descending.
   Stream<List<CategorySpending>> watchCategoryBreakdown(
@@ -145,6 +156,24 @@ class ReportsRepository {
     ])
       ..where(
         _db.categories.type.equals('expense') &
+            _db.transactions.date.isBiggerOrEqualValue(start) &
+            _db.transactions.date.isSmallerThanValue(endExclusive),
+      );
+    return query.watch();
+  }
+
+  Stream<List<TypedResult>> _watchIncomeRows(
+    DateTime start,
+    DateTime endExclusive,
+  ) {
+    final query = _db.select(_db.transactions).join([
+      innerJoin(
+        _db.categories,
+        _db.categories.id.equalsExp(_db.transactions.categoryId),
+      ),
+    ])
+      ..where(
+        _db.categories.type.equals('income') &
             _db.transactions.date.isBiggerOrEqualValue(start) &
             _db.transactions.date.isSmallerThanValue(endExclusive),
       );

@@ -50,6 +50,33 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _colorValueMeta = const VerificationMeta(
+    'colorValue',
+  );
+  @override
+  late final GeneratedColumn<int> colorValue = GeneratedColumn<int>(
+    'color_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0xFFC6FF3D),
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -68,6 +95,8 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     name,
     type,
     initialBalanceCents,
+    colorValue,
+    isDefault,
     createdAt,
   ];
   @override
@@ -110,6 +139,18 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         ),
       );
     }
+    if (data.containsKey('color_value')) {
+      context.handle(
+        _colorValueMeta,
+        colorValue.isAcceptableOrUnknown(data['color_value']!, _colorValueMeta),
+      );
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -141,6 +182,14 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.int,
         data['${effectivePrefix}initial_balance_cents'],
       )!,
+      colorValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color_value'],
+      )!,
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -159,12 +208,16 @@ class Account extends DataClass implements Insertable<Account> {
   final String name;
   final String type;
   final int initialBalanceCents;
+  final int colorValue;
+  final bool isDefault;
   final DateTime createdAt;
   const Account({
     required this.id,
     required this.name,
     required this.type,
     required this.initialBalanceCents,
+    required this.colorValue,
+    required this.isDefault,
     required this.createdAt,
   });
   @override
@@ -174,6 +227,8 @@ class Account extends DataClass implements Insertable<Account> {
     map['name'] = Variable<String>(name);
     map['type'] = Variable<String>(type);
     map['initial_balance_cents'] = Variable<int>(initialBalanceCents);
+    map['color_value'] = Variable<int>(colorValue);
+    map['is_default'] = Variable<bool>(isDefault);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -184,6 +239,8 @@ class Account extends DataClass implements Insertable<Account> {
       name: Value(name),
       type: Value(type),
       initialBalanceCents: Value(initialBalanceCents),
+      colorValue: Value(colorValue),
+      isDefault: Value(isDefault),
       createdAt: Value(createdAt),
     );
   }
@@ -200,6 +257,8 @@ class Account extends DataClass implements Insertable<Account> {
       initialBalanceCents: serializer.fromJson<int>(
         json['initialBalanceCents'],
       ),
+      colorValue: serializer.fromJson<int>(json['colorValue']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -211,6 +270,8 @@ class Account extends DataClass implements Insertable<Account> {
       'name': serializer.toJson<String>(name),
       'type': serializer.toJson<String>(type),
       'initialBalanceCents': serializer.toJson<int>(initialBalanceCents),
+      'colorValue': serializer.toJson<int>(colorValue),
+      'isDefault': serializer.toJson<bool>(isDefault),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -220,12 +281,16 @@ class Account extends DataClass implements Insertable<Account> {
     String? name,
     String? type,
     int? initialBalanceCents,
+    int? colorValue,
+    bool? isDefault,
     DateTime? createdAt,
   }) => Account(
     id: id ?? this.id,
     name: name ?? this.name,
     type: type ?? this.type,
     initialBalanceCents: initialBalanceCents ?? this.initialBalanceCents,
+    colorValue: colorValue ?? this.colorValue,
+    isDefault: isDefault ?? this.isDefault,
     createdAt: createdAt ?? this.createdAt,
   );
   Account copyWithCompanion(AccountsCompanion data) {
@@ -236,6 +301,10 @@ class Account extends DataClass implements Insertable<Account> {
       initialBalanceCents: data.initialBalanceCents.present
           ? data.initialBalanceCents.value
           : this.initialBalanceCents,
+      colorValue: data.colorValue.present
+          ? data.colorValue.value
+          : this.colorValue,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -247,14 +316,23 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('name: $name, ')
           ..write('type: $type, ')
           ..write('initialBalanceCents: $initialBalanceCents, ')
+          ..write('colorValue: $colorValue, ')
+          ..write('isDefault: $isDefault, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, type, initialBalanceCents, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    type,
+    initialBalanceCents,
+    colorValue,
+    isDefault,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -263,6 +341,8 @@ class Account extends DataClass implements Insertable<Account> {
           other.name == this.name &&
           other.type == this.type &&
           other.initialBalanceCents == this.initialBalanceCents &&
+          other.colorValue == this.colorValue &&
+          other.isDefault == this.isDefault &&
           other.createdAt == this.createdAt);
 }
 
@@ -271,12 +351,16 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<String> name;
   final Value<String> type;
   final Value<int> initialBalanceCents;
+  final Value<int> colorValue;
+  final Value<bool> isDefault;
   final Value<DateTime> createdAt;
   const AccountsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.type = const Value.absent(),
     this.initialBalanceCents = const Value.absent(),
+    this.colorValue = const Value.absent(),
+    this.isDefault = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   AccountsCompanion.insert({
@@ -284,6 +368,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     required String name,
     required String type,
     this.initialBalanceCents = const Value.absent(),
+    this.colorValue = const Value.absent(),
+    this.isDefault = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name),
        type = Value(type);
@@ -292,6 +378,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<String>? name,
     Expression<String>? type,
     Expression<int>? initialBalanceCents,
+    Expression<int>? colorValue,
+    Expression<bool>? isDefault,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -300,6 +388,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (type != null) 'type': type,
       if (initialBalanceCents != null)
         'initial_balance_cents': initialBalanceCents,
+      if (colorValue != null) 'color_value': colorValue,
+      if (isDefault != null) 'is_default': isDefault,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -309,6 +399,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<String>? name,
     Value<String>? type,
     Value<int>? initialBalanceCents,
+    Value<int>? colorValue,
+    Value<bool>? isDefault,
     Value<DateTime>? createdAt,
   }) {
     return AccountsCompanion(
@@ -316,6 +408,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       name: name ?? this.name,
       type: type ?? this.type,
       initialBalanceCents: initialBalanceCents ?? this.initialBalanceCents,
+      colorValue: colorValue ?? this.colorValue,
+      isDefault: isDefault ?? this.isDefault,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -335,6 +429,12 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (initialBalanceCents.present) {
       map['initial_balance_cents'] = Variable<int>(initialBalanceCents.value);
     }
+    if (colorValue.present) {
+      map['color_value'] = Variable<int>(colorValue.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -348,6 +448,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('name: $name, ')
           ..write('type: $type, ')
           ..write('initialBalanceCents: $initialBalanceCents, ')
+          ..write('colorValue: $colorValue, ')
+          ..write('isDefault: $isDefault, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1178,6 +1280,8 @@ typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
   required String name,
   required String type,
   Value<int> initialBalanceCents,
+  Value<int> colorValue,
+  Value<bool> isDefault,
   Value<DateTime> createdAt,
 });
 typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
@@ -1185,6 +1289,8 @@ typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
   Value<String> name,
   Value<String> type,
   Value<int> initialBalanceCents,
+  Value<int> colorValue,
+  Value<bool> isDefault,
   Value<DateTime> createdAt,
 });
 
@@ -1237,6 +1343,16 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<int> get initialBalanceCents => $composableBuilder(
     column: $table.initialBalanceCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1300,6 +1416,16 @@ class $$AccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -1328,6 +1454,14 @@ class $$AccountsTableAnnotationComposer
     column: $table.initialBalanceCents,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get colorValue => $composableBuilder(
+    column: $table.colorValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -1390,12 +1524,16 @@ class $$AccountsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<int> initialBalanceCents = const Value.absent(),
+                Value<int> colorValue = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => AccountsCompanion(
                 id: id,
                 name: name,
                 type: type,
                 initialBalanceCents: initialBalanceCents,
+                colorValue: colorValue,
+                isDefault: isDefault,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -1404,12 +1542,16 @@ class $$AccountsTableTableManager
                 required String name,
                 required String type,
                 Value<int> initialBalanceCents = const Value.absent(),
+                Value<int> colorValue = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => AccountsCompanion.insert(
                 id: id,
                 name: name,
                 type: type,
                 initialBalanceCents: initialBalanceCents,
+                colorValue: colorValue,
+                isDefault: isDefault,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

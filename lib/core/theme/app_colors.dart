@@ -17,4 +17,16 @@ class AppColors {
   static const Color shimmerHighlightLight = Color(0xFFF5F6F8);
   static const Color shimmerBaseDark = Color(0xFF2A2C30);
   static const Color shimmerHighlightDark = Color(0xFF3A3D42);
+
+  /// Selectable wallet accent colors (see "Warna" swatches on the new/edit
+  /// wallet form) — first entry is the default for a freshly created wallet.
+  static const List<Color> walletPalette = [
+    Color(0xFFC6FF3D),
+    Color(0xFF3DDCC6),
+    Color(0xFF9B5DE5),
+    Color(0xFFFF922B),
+    Color(0xFFF15BB5),
+    Color(0xFF339AF0),
+    Color(0xFFFFD43B),
+  ];
 }
