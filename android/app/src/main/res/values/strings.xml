@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_total_balance_name">Total Saldo &amp; Transaksi</string>
+    <string name="widget_total_balance_description">Pantau total saldo terkini dan tombol cepat tambah transaksi (+)</string>
+</resources>

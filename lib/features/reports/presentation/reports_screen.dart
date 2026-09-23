@@ -103,6 +103,8 @@ class ReportsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             NetWorthCard(onTap: () => _comingSoon(context, 'Detail kekayaan bersih')),
             const SizedBox(height: AppSpacing.md),
+            const MonthSummaryCard(),
+            const SizedBox(height: AppSpacing.md),
             const ExpenseBarChartCard(),
             const SizedBox(height: AppSpacing.md),
             const CategoryDonutCard(),
