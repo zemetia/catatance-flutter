@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/theme_providers.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../accounts/presentation/account_providers.dart';
 import 'profile_settings_providers.dart';
 import 'widgets/profile_balance_card.dart';
 import 'widgets/profile_header_card.dart';
@@ -57,6 +58,8 @@ class ProfileScreen extends ConsumerWidget {
     };
     final profile = ref.watch(userProfileProvider);
     final language = ref.watch(appLanguageProvider);
+    final totalBalance = ref.watch(totalBalanceProvider);
+    final walletCount = ref.watch(accountListProvider).value?.length ?? 0;
 
     final accountItems = [
       MenuSectionItem(
@@ -108,7 +111,7 @@ class ProfileScreen extends ConsumerWidget {
         icon: LucideIcons.layout_grid,
         label: 'Widget',
         description: 'Atur widget layar utama',
-        onTap: () => _comingSoon(context, 'Widget'),
+        onTap: () => context.push('/profile/widgets'),
       ),
     ];
 
@@ -129,25 +132,25 @@ class ProfileScreen extends ConsumerWidget {
         icon: LucideIcons.chart_pie,
         label: 'Semua Budget',
         description: 'Pantau anggaran tiap kategori',
-        onTap: () => _comingSoon(context, 'Semua Budget'),
+        onTap: () => context.push('/budget/all'),
       ),
       MenuSectionItem(
         icon: LucideIcons.target,
         label: 'Semua Target',
         description: 'Lacak progres target tabunganmu',
-        onTap: () => _comingSoon(context, 'Semua Target'),
+        onTap: () => context.push('/savings-goals'),
       ),
       MenuSectionItem(
         icon: LucideIcons.hand_coins,
         label: 'Utang & Piutang',
         description: 'Catat pinjaman yang belum lunas',
-        onTap: () => _comingSoon(context, 'Utang & Piutang'),
+        onTap: () => context.push('/debts'),
       ),
       MenuSectionItem(
         icon: LucideIcons.credit_card,
         label: 'Cicilan',
         description: 'Pantau jadwal dan sisa cicilan',
-        onTap: () => _comingSoon(context, 'Cicilan'),
+        onTap: () => context.push('/installments'),
       ),
       MenuSectionItem(
         icon: LucideIcons.trophy,
@@ -171,7 +174,7 @@ class ProfileScreen extends ConsumerWidget {
         icon: LucideIcons.scan_line,
         label: 'Tangkap Notifikasi',
         description: 'Deteksi transaksi dari notifikasi bank',
-        onTap: () => _comingSoon(context, 'Tangkap Notifikasi'),
+        onTap: () => context.push('/profile/bank-notifications'),
       ),
       MenuSectionItem(
         icon: LucideIcons.bot,
@@ -183,7 +186,7 @@ class ProfileScreen extends ConsumerWidget {
         icon: LucideIcons.award,
         label: 'Lencana',
         description: 'Koleksi pencapaianmu di aplikasi',
-        onTap: () => _comingSoon(context, 'Lencana'),
+        onTap: () => context.push('/badges'),
       ),
       MenuSectionItem(
         icon: LucideIcons.heart_handshake,
@@ -250,8 +253,8 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             ProfileBalanceCard(
-              balanceCents: 0,
-              walletCount: 1,
+              balanceCents: totalBalance,
+              walletCount: walletCount,
               onTap: () => context.push('/wallets'),
             ),
             const SizedBox(height: AppSpacing.lg),

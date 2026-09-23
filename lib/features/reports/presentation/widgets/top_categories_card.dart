@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/security/security_providers.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -9,16 +11,24 @@ import '../../domain/report_models.dart';
 import '../reports_providers.dart';
 import 'report_shimmer_box.dart';
 
-/// "Kategori teratas" card: the top expense categories for the selected
-/// month with a share bar per row.
+/// "Kategori teratas" card: the top categories (expense, income, or net) for
+/// the selected month with a share bar per row.
 class TopCategoriesCard extends ConsumerWidget {
   const TopCategoriesCard({this.onSeeAll, super.key});
 
   final VoidCallback? onSeeAll;
 
+  static String _emptyLabelFor(ReportMode mode) => switch (mode) {
+    ReportMode.expense => 'Belum ada pengeluaran bulan ini',
+    ReportMode.income => 'Belum ada pemasukan bulan ini',
+    ReportMode.net => 'Belum ada transaksi bulan ini',
+  };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoryBreakdownProvider);
+    final mode = ref.watch(selectedReportModeProvider);
+    final hideBalance = ref.watch(hideBalanceProvider);
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -43,7 +53,7 @@ class TopCategoriesCard extends ConsumerWidget {
                 ? Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                     child: Text(
-                      'Belum ada pengeluaran bulan ini',
+                      _emptyLabelFor(mode),
                       style: textTheme.bodySmall?.copyWith(color: scheme.outline),
                     ),
                   )
@@ -52,7 +62,11 @@ class TopCategoriesCard extends ConsumerWidget {
                       for (final item in items.take(5))
                         Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.sm),
-                          child: _CategoryRow(item: item),
+                          child: _CategoryRow(
+                            item: item,
+                            mode: mode,
+                            hideBalance: hideBalance,
+                          ),
                         ),
                     ],
                   ),
@@ -75,15 +89,24 @@ class TopCategoriesCard extends ConsumerWidget {
 }
 
 class _CategoryRow extends StatelessWidget {
-  const _CategoryRow({required this.item});
+  const _CategoryRow({
+    required this.item,
+    required this.mode,
+    required this.hideBalance,
+  });
 
   final CategorySpending item;
+  final ReportMode mode;
+  final bool hideBalance;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final percentLabel = '${(item.share * 100).round()}%';
+    final barColor = mode == ReportMode.net
+        ? (item.totalCents >= 0 ? AppColors.income : AppColors.expense)
+        : scheme.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +122,7 @@ class _CategoryRow extends StatelessWidget {
             Text(
               percentLabel,
               style: textTheme.bodyMedium?.copyWith(
-                color: scheme.primary,
+                color: barColor,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -112,14 +135,25 @@ class _CategoryRow extends StatelessWidget {
             value: item.share.clamp(0, 1),
             minHeight: 8,
             backgroundColor: scheme.surfaceContainerHighest,
-            valueColor: AlwaysStoppedAnimation(scheme.primary),
+            valueColor: AlwaysStoppedAnimation(barColor),
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          '${formatRupiahCompact(item.totalCents)} • $percentLabel',
-          style: textTheme.bodySmall?.copyWith(color: scheme.outline),
-        ),
+        hideBalance
+            ? HoldToReveal(
+                builder: (context, revealed) => Text(
+                  revealed
+                      ? '${formatRupiahCompact(item.totalCents)} • $percentLabel'
+                      : '•••••• • $percentLabel',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: revealed ? null : scheme.outline,
+                  ),
+                ),
+              )
+            : Text(
+                '${formatRupiahCompact(item.totalCents)} • $percentLabel',
+                style: textTheme.bodySmall?.copyWith(color: scheme.outline),
+              ),
       ],
     );
   }

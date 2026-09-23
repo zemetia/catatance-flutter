@@ -218,7 +218,7 @@ class _PersonalWallets extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                formatRupiahCompact(totalBalanceCents),
+                formatRupiah(totalBalanceCents),
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -237,6 +237,7 @@ class _PersonalWallets extends ConsumerWidget {
           _WalletCard(
             account: accounts[i],
             delay: Duration(milliseconds: 40 * i),
+            onTap: () => context.push('/wallets/${accounts[i].id}/edit'),
             onDelete: () => _confirmDelete(context, ref, accounts[i]),
           ),
         ],
@@ -248,11 +249,13 @@ class _PersonalWallets extends ConsumerWidget {
 class _WalletCard extends StatelessWidget {
   const _WalletCard({
     required this.account,
+    required this.onTap,
     required this.onDelete,
     this.delay = Duration.zero,
   });
 
   final Account account;
+  final VoidCallback onTap;
   final VoidCallback onDelete;
   final Duration delay;
 
@@ -277,6 +280,7 @@ class _WalletCard extends StatelessWidget {
       ),
       child: AppCard(
         delay: delay,
+        onTap: onTap,
         child: Row(
           children: [
             IconBadge(
@@ -284,17 +288,20 @@ class _WalletCard extends StatelessWidget {
               color: account.color,
               shape: BoxShape.rectangle,
             ),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
+              flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Flexible(
+                      Expanded(
+                        flex: 3,
                         child: Text(
                           account.name,
                           overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                           style: textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -302,20 +309,55 @@ class _WalletCard extends StatelessWidget {
                       ),
                       if (account.isDefault) ...[
                         const SizedBox(width: AppSpacing.xs),
-                        _DefaultBadge(color: account.color),
+                        Flexible(
+                          flex: 2,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: _DefaultBadge(color: account.color),
+                          ),
+                        ),
                       ],
                     ],
                   ),
-                  Text(
-                    account.type.label,
-                    style: textTheme.bodySmall?.copyWith(color: scheme.outline),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(
+                        account.currency.flag,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${account.currency.code} · ${account.type.label}',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: scheme.outline,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            Text(
-              formatRupiahCompact(account.balanceCents),
-              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              flex: 4,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    account.formattedBalance,
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: AppSpacing.xs),
             Icon(LucideIcons.chevron_right, size: 18, color: scheme.outline),

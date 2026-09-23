@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -28,6 +29,10 @@ class WalletSummaryCard extends StatelessWidget {
 
     return AppCard(
       delay: delay,
+      color: scheme.primaryContainer.withValues(alpha: 0.14),
+      backgroundLayers: const [
+        Positioned(right: -36, top: -36, child: DecorativeCircle(size: 130, alpha: 0.10)),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -41,42 +46,70 @@ class WalletSummaryCard extends StatelessWidget {
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: AppSpacing.md),
-          Divider(height: 1, color: scheme.outline.withValues(alpha: 0.15)),
-          for (final account in accounts) ...[
-            const SizedBox(height: AppSpacing.md),
-            InkWell(
-              onTap: onAccountTap == null ? null : () => onAccountTap!(account),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              child: Row(
-                children: [
-                  IconBadge(icon: account.type.icon, shape: BoxShape.rectangle),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          account.name,
-                          style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          account.type.label,
-                          style: textTheme.bodySmall?.copyWith(color: scheme.outline),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    formatRupiahCompact(account.balanceCents),
-                    style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Icon(LucideIcons.chevron_right, size: 18, color: scheme.outline),
-                ],
-              ),
+          for (var i = 0; i < accounts.length; i++) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.sm),
+            _AccountRow(
+              account: accounts[i],
+              color: AppColors.walletPalette[i % AppColors.walletPalette.length],
+              onTap: onAccountTap == null ? null : () => onAccountTap!(accounts[i]),
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// One wallet row, styled as a small tinted card matching this project's
+/// "colored panel" pattern rather than a bare divided list row.
+class _AccountRow extends StatelessWidget {
+  const _AccountRow({required this.account, required this.color, this.onTap});
+
+  final Account account;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Material(
+      color: scheme.surface.withValues(alpha: 0.5),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Row(
+            children: [
+              IconBadge(icon: account.type.icon, color: color, shape: BoxShape.rectangle),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      account.name,
+                      style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      account.type.label,
+                      style: textTheme.bodySmall?.copyWith(color: scheme.outline),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                account.formattedBalanceCompact,
+                style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Icon(LucideIcons.chevron_right, size: 18, color: scheme.outline),
+            ],
+          ),
+        ),
       ),
     );
   }

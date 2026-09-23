@@ -23,8 +23,10 @@ class TransactionTile extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     final isIncome = item.isIncome;
-    final amountPrefix = isIncome ? '+' : '-';
-    final amountColor = isIncome ? AppColors.income : scheme.onSurface;
+    final amountPrefix = item.isTransfer ? '' : (isIncome ? '+' : '-');
+    final amountColor = item.isTransfer
+        ? scheme.outline
+        : (isIncome ? AppColors.income : scheme.onSurface);
     final formattedDate = DateFormat('d MMM • HH:mm', 'id_ID').format(item.date);
 
     return InkWell(
@@ -48,9 +50,7 @@ class TransactionTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.note != null && item.note!.isNotEmpty
-                        ? item.note!
-                        : item.categoryName,
+                    item.title,
                     style: textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -59,7 +59,9 @@ class TransactionTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${item.categoryName} • ${item.accountName} • $formattedDate',
+                    item.isTransfer
+                        ? formattedDate
+                        : '${item.categoryName} • ${item.accountName} • $formattedDate',
                     style: textTheme.bodySmall?.copyWith(
                       color: scheme.outline,
                     ),
@@ -71,7 +73,7 @@ class TransactionTile extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
-              '$amountPrefix${formatRupiah(item.amountCents)}',
+              '$amountPrefix${formatCurrencyInput(item.amountCents, currency: item.accountCurrency)}',
               style: textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: amountColor,

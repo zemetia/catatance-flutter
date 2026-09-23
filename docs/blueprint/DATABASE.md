@@ -36,7 +36,102 @@ class Transactions extends Table {
   DateTimeColumn get date => dateTime()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
+
+class Debts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get type => text()();            // 'debt' | 'receivable'
+  TextColumn get personName => text()();
+  IntColumn get amountCents => integer()();
+  IntColumn get paidAmountCents => integer().withDefault(const Constant(0))();
+  DateTimeColumn get dueDate => dateTime().nullable()();
+  DateTimeColumn get transactionDate => dateTime()();
+  TextColumn get status => text().withDefault(const Constant('unpaid'))(); // 'unpaid' | 'paid'
+  TextColumn get note => text().nullable()();
+  IntColumn get accountId => integer().nullable().references(Accounts, #id)();
+  IntColumn get splitBillId => integer().nullable().references(SplitBills, #id)(); // set when auto-generated from a patungan participant
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class DebtPayments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get debtId => integer().references(Debts, #id)();
+  IntColumn get amountCents => integer()();
+  DateTimeColumn get paymentDate => dateTime()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+// Patungan (group bill): one expense transaction for the full amount paid,
+// grouped via this table, with a Debts (type='receivable') row auto-created
+// per named participant's share — linked back through Debts.splitBillId so
+// repayment reuses the existing Utang & Piutang flow rather than duplicating it.
+class SplitBills extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get transactionId => integer().references(Transactions, #id)();
+  IntColumn get totalAmountCents => integer()();
+  BoolColumn get payerIncluded => boolean().withDefault(const Constant(true))();
+  IntColumn get payerShareCents => integer().withDefault(const Constant(0))();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+// Cicilan (installment plan): fixed monthly amount over a fixed tenor.
+// When both accountId and categoryId are set, paying an installment also
+// deducts the wallet balance and inserts a real Transactions row so the
+// payment shows up in Transaksi/Laporan/Dasbor, not just its own screen.
+// paidAmountCents sums actual amounts paid (not paidInstallments * fixed
+// amount) so a custom/partial payment never drifts the progress math.
+class Installments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  IntColumn get totalAmountCents => integer()();
+  IntColumn get tenorMonths => integer()();
+  IntColumn get installmentAmountCents => integer()();
+  IntColumn get paidInstallments => integer().withDefault(const Constant(0))();
+  IntColumn get paidAmountCents => integer().withDefault(const Constant(0))();
+  DateTimeColumn get startDate => dateTime()();
+  IntColumn get accountId => integer().nullable().references(Accounts, #id)();
+  IntColumn get categoryId => integer().nullable().references(Categories, #id)();
+  TextColumn get note => text().nullable()();
+  TextColumn get status =>
+      text().withDefault(const Constant('active'))(); // 'active' | 'completed'
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class InstallmentPayments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get installmentId => integer().references(Installments, #id)();
+  IntColumn get amountCents => integer()();
+  DateTimeColumn get paymentDate => dateTime()();
+  IntColumn get transactionId =>
+      integer().nullable().references(Transactions, #id)();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class Budgets extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get categoryId => integer().references(Categories, #id)();
+  IntColumn get limitCents => integer()();
+  TextColumn get periodType =>
+      text().withDefault(const Constant('monthly'))(); // monthly | weekly | custom
+  DateTimeColumn get customStartDate => dateTime().nullable()();
+  DateTimeColumn get customEndDate => dateTime().nullable()();
+  BoolColumn get carryOverEnabled => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
 ```
+
+A `Budgets` row is a recurring *configuration*, not a per-period instance —
+for `monthly`/`weekly` the active period's actual date range is always
+resolved live from "now" (`resolveBudgetPeriod` in
+`features/budget/domain/budget_period_type.dart`), never stored, so a
+recurring budget doesn't need a new row each period. `custom` uses the
+stored `customStartDate`/`customEndDate` as a one-off inclusive range
+instead. "Bawa sisa periode lalu" (`carryOverEnabled`) adds the *previous*
+recurring period's unspent balance on top of the current period's limit;
+not meaningful for `custom` (no natural predecessor period).
 
 ## Money handling
 

@@ -5,22 +5,26 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/currencies.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/input_formatters.dart';
+export '../../../core/utils/input_formatters.dart' show ThousandsSeparatorInputFormatter;
 import '../../accounts/domain/account.dart';
 import '../../accounts/presentation/account_providers.dart';
-import '../../accounts/presentation/widgets/amount_keypad.dart';
 import '../../accounts/presentation/widgets/wallet_picker_sheet.dart';
 import '../../budget/presentation/budget_providers.dart';
 import '../../categories/domain/category_item.dart';
 import '../../categories/presentation/category_providers.dart';
+import '../../savings_goals/presentation/savings_goal_providers.dart';
+import '../../split_bills/presentation/split_bill_form_screen.dart';
 import 'transaction_providers.dart';
 import 'widgets/budget_info_card.dart';
 import 'widgets/category_picker_sheet.dart';
 import 'widgets/receipt_scanner_sheet.dart';
-import 'widgets/split_bill_sheet.dart';
 import 'widgets/tag_picker_sheet.dart';
+import 'widgets/target_picker_sheet.dart';
 import 'widgets/transaction_type_switch.dart';
 import 'widgets/voice_input_sheet.dart';
 
@@ -49,19 +53,42 @@ class AddTransactionScreen extends HookConsumerWidget {
     // Repositories & Data Providers
     final accounts = ref.watch(accountListProvider).value ?? const <Account>[];
     final allCategories = ref.watch(allCategoriesProvider).value ?? const <CategoryItem>[];
-    final budgets = ref.watch(budgetListProvider);
+    final budgets = ref.watch(liveBudgetListProvider);
+    final savingsGoals =
+        ref.watch(savingsGoalListProvider).value ?? const <SavingsGoal>[];
 
     // Form states
     final isExpense = useState(true);
     final amountDigits = useState('');
-    final selectedAccount = useState<Account?>(null);
+    final userSelectedAccount = useState<Account?>(null);
     final selectedCategory = useState<CategoryItem?>(null);
     final noteController = useTextEditingController();
     final selectedDate = useState<DateTime>(DateTime.now());
     final selectedTags = useState<List<String>>([]);
-    final splitBillDetails = useState<SplitBillResult?>(null);
-    final isKeypadExpanded = useState(true);
+    final selectedGoal = useState<SavingsGoal?>(null);
     final isSubmitting = useState(false);
+
+    // Target tabungan only applies to Pemasukan — clear it when switching
+    // to Pengeluaran so a stale target never gets silently reused.
+    useEffect(() {
+      if (isExpense.value && selectedGoal.value != null) {
+        selectedGoal.value = null;
+      }
+      return null;
+    }, [isExpense.value]);
+
+    // Resolved account: explicit user selection or default account
+    final selectedAccount = userSelectedAccount.value ??
+        (accounts.isNotEmpty
+            ? (accounts.where((a) => a.isDefault).firstOrNull ?? accounts.first)
+            : null);
+
+    // Current wallet currency
+    final currentCurrency = selectedAccount?.currency ?? defaultCurrency;
+
+    final amountController = useTextEditingController(
+      text: formatCurrencyInput(0, currency: currentCurrency),
+    );
 
     // Filter categories based on expense / income
     final currentCategories = useMemoized(
@@ -69,15 +96,17 @@ class AddTransactionScreen extends HookConsumerWidget {
       [allCategories, isExpense.value],
     );
 
-    // Auto-select initial account & category
+    // Keep nominal text controller synced with current currency
     useEffect(() {
-      if (accounts.isNotEmpty && selectedAccount.value == null) {
-        selectedAccount.value =
-            accounts.where((a) => a.isDefault).firstOrNull ??
-            (accounts.isNotEmpty ? accounts.first : null);
-      }
+      final currentNum =
+          int.tryParse(amountDigits.value.isEmpty ? '0' : amountDigits.value) ?? 0;
+      final formatted = formatCurrencyInput(currentNum, currency: currentCurrency);
+      amountController.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
       return null;
-    }, [accounts]);
+    }, [currentCurrency]);
 
     useEffect(() {
       if (currentCategories.isNotEmpty) {
@@ -94,27 +123,70 @@ class AddTransactionScreen extends HookConsumerWidget {
     final amount =
         int.tryParse(amountDigits.value.isEmpty ? '0' : amountDigits.value) ?? 0;
 
+    // Presets adjusted by currency
+    final presets = useMemoized(() {
+      if (currentCurrency.code == 'IDR') {
+        return const [
+          (amount: 10000, label: '+10rb'),
+          (amount: 50000, label: '+50rb'),
+          (amount: 100000, label: '+100rb'),
+          (amount: 500000, label: '+500rb'),
+        ];
+      }
+      if (currentCurrency.decimalDigits == 0 &&
+          (currentCurrency.code == 'JPY' ||
+              currentCurrency.code == 'KRW' ||
+              currentCurrency.code == 'VND')) {
+        return [
+          (amount: 1000, label: '+${currentCurrency.symbol}1rb'),
+          (amount: 5000, label: '+${currentCurrency.symbol}5rb'),
+          (amount: 10000, label: '+${currentCurrency.symbol}10rb'),
+          (amount: 50000, label: '+${currentCurrency.symbol}50rb'),
+        ];
+      }
+      return [
+        (amount: 10, label: '+${currentCurrency.symbol}10'),
+        (amount: 50, label: '+${currentCurrency.symbol}50'),
+        (amount: 100, label: '+${currentCurrency.symbol}100'),
+        (amount: 500, label: '+${currentCurrency.symbol}500'),
+      ];
+    }, [currentCurrency]);
+
     // Check if selected category has an active budget
     final activeBudget = useMemoized(() {
       if (!isExpense.value || selectedCategory.value == null) return null;
       return budgets
-          .where(
-            (b) =>
-                b.name.toLowerCase() ==
-                selectedCategory.value!.name.toLowerCase(),
-          )
+          .where((b) => b.categoryId == selectedCategory.value!.id)
           .firstOrNull;
     }, [budgets, selectedCategory.value, isExpense.value]);
 
     // Handlers
+    void updateAmountValue(int nextAmount) {
+      if (nextAmount <= 0) {
+        amountDigits.value = '';
+        final text = formatCurrencyInput(0, currency: currentCurrency);
+        amountController.value = TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: text.length),
+        );
+      } else {
+        final digits = nextAmount.toString();
+        amountDigits.value = digits;
+        final formatted = formatCurrencyInput(nextAmount, currency: currentCurrency);
+        amountController.value = TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }
+    }
+
     void addPresetAmount(int add) {
       final current = amount;
-      final next = current + add;
-      amountDigits.value = next.toString();
+      updateAmountValue(current + add);
     }
 
     void clearAmount() {
-      amountDigits.value = '';
+      updateAmountValue(0);
     }
 
     Future<void> pickAccount() async {
@@ -122,9 +194,9 @@ class AddTransactionScreen extends HookConsumerWidget {
         context,
         title: 'Pilih Dompet / Akun',
         accounts: accounts,
-        selected: selectedAccount.value,
+        selected: selectedAccount,
       );
-      if (picked != null) selectedAccount.value = picked;
+      if (picked != null) userSelectedAccount.value = picked;
     }
 
     Future<void> pickCategory() async {
@@ -135,6 +207,15 @@ class AddTransactionScreen extends HookConsumerWidget {
         isExpense: isExpense.value,
       );
       if (picked != null) selectedCategory.value = picked;
+    }
+
+    Future<void> pickTarget() async {
+      final picked = await showTargetPickerSheet(
+        context,
+        goals: savingsGoals,
+        selected: selectedGoal.value,
+      );
+      selectedGoal.value = picked;
     }
 
     Future<void> pickDate() async {
@@ -156,9 +237,9 @@ class AddTransactionScreen extends HookConsumerWidget {
     }
 
     Future<void> handleVoiceInput() async {
-      final result = await showVoiceInputSheet(context);
+      final result = await showVoiceInputSheet(context, currency: currentCurrency);
       if (result != null) {
-        amountDigits.value = result.amount.toString();
+        updateAmountValue(result.amount);
         noteController.text = result.note;
         if (result.isIncome != null) {
           isExpense.value = !result.isIncome!;
@@ -184,10 +265,10 @@ class AddTransactionScreen extends HookConsumerWidget {
     }
 
     Future<void> handleReceiptScan() async {
-      final result = await showReceiptScannerSheet(context);
+      final result = await showReceiptScannerSheet(context, currency: currentCurrency);
       if (result != null) {
         isExpense.value = true; // Struk default to expense
-        amountDigits.value = result.amount.toString();
+        updateAmountValue(result.amount);
         noteController.text = result.note;
         if (result.suggestedCategoryName != null) {
           final matched = allCategories.where(
@@ -209,20 +290,34 @@ class AddTransactionScreen extends HookConsumerWidget {
     }
 
     Future<void> handleSplitBill() async {
-      final result = await showSplitBillSheet(context, initialAmount: amount);
-      if (result != null) {
-        splitBillDetails.value = result;
-        amountDigits.value = result.finalAmount.toString();
+      if (amount <= 0 || selectedAccount == null || selectedCategory.value == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Isi nominal, dompet, dan kategori dulu sebelum patungan'),
+          ),
+        );
+        return;
+      }
 
-        final splitNote = result.onlyMyShare
-            ? '[Patungan ${result.personCount} org (Total: ${formatRupiahCompact(result.totalAmount)})]'
-            : '[Patungan ${result.personCount} org @ ${formatRupiahCompact(result.amountPerPerson)}]';
+      final saved = await context.push<bool>(
+        '/split-bills/new',
+        extra: SplitBillFormArgs(
+          accountId: selectedAccount.id,
+          accountName: selectedAccount.name,
+          categoryId: selectedCategory.value!.id,
+          categoryName: selectedCategory.value!.name,
+          totalAmountCents: amount,
+          date: selectedDate.value,
+          currency: currentCurrency,
+          note: noteController.text.trim().isEmpty ? null : noteController.text.trim(),
+        ),
+      );
 
-        if (noteController.text.isEmpty) {
-          noteController.text = splitNote;
-        } else if (!noteController.text.contains('Patungan')) {
-          noteController.text = '${noteController.text} $splitNote';
-        }
+      // The split bill screen already created the transaction + piutang
+      // directly, so this screen's own "Simpan Transaksi" must not run
+      // again for the same amount — leave along with it.
+      if (saved == true && context.mounted && context.canPop()) {
+        context.pop();
       }
     }
 
@@ -240,7 +335,8 @@ class AddTransactionScreen extends HookConsumerWidget {
       final cat = selectedCategory.value;
       if (cat == null) return;
 
-      final controller = TextEditingController(text: '1000000');
+      final defaultBudget = currentCurrency.code == 'IDR' ? '1000000' : '500';
+      final controller = TextEditingController(text: defaultBudget);
       showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -253,8 +349,8 @@ class AddTransactionScreen extends HookConsumerWidget {
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  prefixText: 'Rp ',
+                decoration: InputDecoration(
+                  prefixText: '${currentCurrency.symbol} ',
                   labelText: 'Batas Anggaran Bulanan',
                 ),
               ),
@@ -266,21 +362,23 @@ class AddTransactionScreen extends HookConsumerWidget {
               child: const Text('Batal'),
             ),
             FilledButton(
-              onPressed: () {
-                final limit = int.tryParse(controller.text) ?? 1000000;
-                final newBudget = BudgetItem(
-                  id: DateTime.now().millisecondsSinceEpoch,
-                  name: cat.name,
-                  icon: cat.iconData,
-                  spentCents: 0,
-                  limitCents: limit,
-                  daysLeft: 8,
+              onPressed: () async {
+                final fallbackLimit = currentCurrency.code == 'IDR' ? 1000000 : 500;
+                final limit = int.tryParse(controller.text) ?? fallbackLimit;
+                await ref.read(budgetActionProvider.notifier).createBudget(
+                  BudgetDraft(
+                    categoryId: cat.id,
+                    limitCents: limit,
+                    periodType: BudgetPeriodType.monthly,
+                    carryOverEnabled: false,
+                  ),
                 );
-                ref.read(budgetListProvider.notifier).update((list) => [...list, newBudget]);
-                Navigator.of(ctx).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Anggaran untuk ${cat.name} berhasil dibuat')),
-                );
+                if (ctx.mounted) Navigator.of(ctx).pop();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Anggaran untuk ${cat.name} berhasil dibuat')),
+                  );
+                }
               },
               child: const Text('Simpan Anggaran'),
             ),
@@ -290,7 +388,7 @@ class AddTransactionScreen extends HookConsumerWidget {
     }
 
     Future<void> submitTransaction() async {
-      if (amount <= 0 || selectedAccount.value == null || selectedCategory.value == null) {
+      if (amount <= 0 || selectedAccount == null || selectedCategory.value == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Mohon masukkan nominal dan pilih kategori.')),
         );
@@ -309,30 +407,19 @@ class AddTransactionScreen extends HookConsumerWidget {
         }
 
         await repo.insert(
-          accountId: selectedAccount.value!.id,
+          accountId: selectedAccount.id,
           categoryId: selectedCategory.value!.id,
           amountCents: amount,
           note: finalNote.isEmpty ? null : finalNote,
           date: selectedDate.value,
+          savingsGoalId: !isExpense.value ? selectedGoal.value?.id : null,
         );
-
-        // If category is in budgeting, update local budget provider
-        if (isExpense.value && activeBudget != null) {
-          ref.read(budgetListProvider.notifier).update((list) {
-            return list.map((b) {
-              if (b.name.toLowerCase() == activeBudget.name.toLowerCase()) {
-                return b.copyWith(spentCents: b.spentCents + amount);
-              }
-              return b;
-            }).toList();
-          });
-        }
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${isExpense.value ? "Pengeluaran" : "Pemasukan"} sebesar ${formatRupiah(amount)} tersimpan',
+                '${isExpense.value ? "Pengeluaran" : "Pemasukan"} sebesar ${formatCurrencyInput(amount, currency: currentCurrency)} tersimpan',
               ),
             ),
           );
@@ -381,7 +468,7 @@ class AddTransactionScreen extends HookConsumerWidget {
               clearAmount();
               noteController.clear();
               selectedTags.value = [];
-              splitBillDetails.value = null;
+              selectedGoal.value = null;
             },
           ),
         ],
@@ -420,12 +507,14 @@ class AddTransactionScreen extends HookConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
-                        GestureDetector(
-                          onTap: () {
-                            isKeypadExpanded.value = !isKeypadExpanded.value;
-                          },
-                          child: Text(
-                            formatRupiah(amount),
+                        IntrinsicWidth(
+                          child: TextField(
+                            controller: amountController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              ThousandsSeparatorInputFormatter(currency: currentCurrency),
+                            ],
+                            textAlign: TextAlign.center,
                             style: textTheme.displayMedium?.copyWith(
                               fontWeight: FontWeight.w900,
                               color: amount > 0
@@ -434,6 +523,15 @@ class AddTransactionScreen extends HookConsumerWidget {
                                       : AppColors.income)
                                   : scheme.onSurface,
                             ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            onChanged: (val) {
+                              final clean = val.replaceAll(RegExp(r'[^\d]'), '');
+                              amountDigits.value = clean == '0' ? '' : clean;
+                            },
                           ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -444,31 +542,15 @@ class AddTransactionScreen extends HookConsumerWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              ActionChip(
-                                label: const Text('+10rb'),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () => addPresetAmount(10000),
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              ActionChip(
-                                label: const Text('+50rb'),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () => addPresetAmount(50000),
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              ActionChip(
-                                label: const Text('+100rb'),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () => addPresetAmount(100000),
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              ActionChip(
-                                label: const Text('+500rb'),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () => addPresetAmount(500000),
-                              ),
-                              if (amount > 0) ...[
+                              for (final preset in presets) ...[
+                                ActionChip(
+                                  label: Text(preset.label),
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () => addPresetAmount(preset.amount),
+                                ),
                                 const SizedBox(width: AppSpacing.xs),
+                              ],
+                              if (amount > 0) ...[
                                 ActionChip(
                                   avatar: const Icon(LucideIcons.x, size: 14),
                                   label: const Text('Reset'),
@@ -482,9 +564,170 @@ class AddTransactionScreen extends HookConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
 
-                  // 3. Dompet & Kategori Card
+                  // 3. Tambah Catatan (Notes input) - Directly below Nominal
+                  Container(
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    ),
+                    child: TextField(
+                      controller: noteController,
+                      maxLines: 2,
+                      minLines: 1,
+                      decoration: InputDecoration(
+                        hintText: 'Tambah catatan transaksi...',
+                        prefixIcon: const Icon(LucideIcons.pencil_line, size: 20),
+                        suffixIcon: noteController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(LucideIcons.x, size: 16),
+                                onPressed: () => noteController.clear(),
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.md,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Active tags display
+                  if (selectedTags.value.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xs + 2),
+                    Wrap(
+                      spacing: AppSpacing.xs,
+                      children: [
+                        for (final tag in selectedTags.value)
+                          Chip(
+                            avatar: const Icon(LucideIcons.hash, size: 12),
+                            label: Text(tag),
+                            visualDensity: VisualDensity.compact,
+                            onDeleted: () {
+                              selectedTags.value = selectedTags.value
+                                  .where((t) => t != tag)
+                                  .toList();
+                            },
+                          ),
+                      ],
+                    ),
+                  ],
+
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // Action chips row [suara, scan struk, patungan, tanggal transaksi (default hari ini), tag, budget]
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        // Suara
+                        ActionChip(
+                          avatar: const Icon(LucideIcons.mic, size: 16),
+                          label: const Text('Suara'),
+                          backgroundColor: scheme.surfaceContainerHigh,
+                          onPressed: handleVoiceInput,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+
+                        // Scan Struk
+                        ActionChip(
+                          avatar: const Icon(LucideIcons.scan_line, size: 16),
+                          label: const Text('Scan Struk'),
+                          backgroundColor: scheme.surfaceContainerHigh,
+                          onPressed: handleReceiptScan,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+
+                        if (isExpense.value) ...[
+                          // Patungan (only for Pengeluaran — split-bill
+                          // produces an expense + piutang, not an income)
+                          ActionChip(
+                            avatar: const Icon(LucideIcons.users, size: 16),
+                            label: const Text('Patungan'),
+                            backgroundColor: scheme.surfaceContainerHigh,
+                            onPressed: handleSplitBill,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                        ] else ...[
+                          // Target (only for Pemasukan — links the income
+                          // to a savings goal's saved amount)
+                          ActionChip(
+                            avatar: Icon(
+                              LucideIcons.target,
+                              size: 16,
+                              color: selectedGoal.value != null
+                                  ? scheme.primary
+                                  : null,
+                            ),
+                            label: Text(
+                              selectedGoal.value?.name ?? 'Target',
+                            ),
+                            backgroundColor: selectedGoal.value != null
+                                ? scheme.primary.withValues(alpha: 0.18)
+                                : scheme.surfaceContainerHigh,
+                            onPressed: pickTarget,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                        ],
+
+                        // Tanggal Transaksi (default hari ini)
+                        ActionChip(
+                          avatar: const Icon(LucideIcons.calendar, size: 16),
+                          label: Text(dateLabel),
+                          backgroundColor: scheme.surfaceContainerHigh,
+                          onPressed: pickDate,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+
+                        // Tag
+                        ActionChip(
+                          avatar: const Icon(LucideIcons.tag, size: 16),
+                          label: Text(
+                            selectedTags.value.isEmpty
+                                ? 'Tag'
+                                : '${selectedTags.value.length} Tag',
+                          ),
+                          backgroundColor: selectedTags.value.isNotEmpty
+                              ? scheme.primary.withValues(alpha: 0.2)
+                              : scheme.surfaceContainerHigh,
+                          onPressed: handlePickTags,
+                        ),
+                        if (isExpense.value) ...[
+                          const SizedBox(width: AppSpacing.xs),
+                          // Budget (jika kategori terpilih masuk dalam pembudgetan)
+                          ActionChip(
+                            avatar: Icon(
+                              activeBudget != null
+                                  ? LucideIcons.shield_check
+                                  : LucideIcons.wallet,
+                              size: 16,
+                              color: activeBudget != null
+                                  ? scheme.primary
+                                  : scheme.outline,
+                            ),
+                            label: Text(
+                              activeBudget != null
+                                  ? 'Budget: ${activeBudget.name}'
+                                  : 'Budget',
+                            ),
+                            backgroundColor: activeBudget != null
+                                ? scheme.primary.withValues(alpha: 0.18)
+                                : scheme.surfaceContainerHigh,
+                            onPressed: () {
+                              if (activeBudget == null) {
+                                handleCreateQuickBudget();
+                              }
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // 4. Dompet & Kategori Card
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
@@ -504,12 +747,12 @@ class AddTransactionScreen extends HookConsumerWidget {
                                 CircleAvatar(
                                   radius: 20,
                                   backgroundColor:
-                                      (selectedAccount.value?.color ?? scheme.primary)
+                                      (selectedAccount?.color ?? scheme.primary)
                                           .withValues(alpha: 0.18),
                                   child: Icon(
-                                    selectedAccount.value?.type.icon ??
+                                    selectedAccount?.type.icon ??
                                         LucideIcons.wallet,
-                                    color: selectedAccount.value?.color ??
+                                    color: selectedAccount?.color ??
                                         scheme.primary,
                                     size: 20,
                                   ),
@@ -526,7 +769,7 @@ class AddTransactionScreen extends HookConsumerWidget {
                                         ),
                                       ),
                                       Text(
-                                        selectedAccount.value?.name ?? 'Pilih Dompet',
+                                        selectedAccount?.name ?? 'Pilih Dompet',
                                         style: textTheme.titleSmall?.copyWith(
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -534,11 +777,9 @@ class AddTransactionScreen extends HookConsumerWidget {
                                     ],
                                   ),
                                 ),
-                                if (selectedAccount.value != null)
+                                if (selectedAccount != null)
                                   Text(
-                                    formatRupiahCompact(
-                                      selectedAccount.value!.balanceCents,
-                                    ),
+                                    selectedAccount.formattedBalanceCompact,
                                     style: textTheme.bodySmall?.copyWith(
                                       color: scheme.outline,
                                       fontWeight: FontWeight.w600,
@@ -641,190 +882,17 @@ class AddTransactionScreen extends HookConsumerWidget {
                   ],
                   const SizedBox(height: AppSpacing.md),
 
-                  // 4. Tambah Catatan (Notes input)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                    ),
-                    child: TextField(
-                      controller: noteController,
-                      maxLines: 2,
-                      minLines: 1,
-                      decoration: InputDecoration(
-                        hintText: 'Tambah catatan transaksi...',
-                        prefixIcon: const Icon(LucideIcons.pencil_line, size: 20),
-                        suffixIcon: noteController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(LucideIcons.x, size: 16),
-                                onPressed: () => noteController.clear(),
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.md,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Active tags display
-                  if (selectedTags.value.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.xs + 2),
-                    Wrap(
-                      spacing: AppSpacing.xs,
-                      children: [
-                        for (final tag in selectedTags.value)
-                          Chip(
-                            avatar: const Icon(LucideIcons.hash, size: 12),
-                            label: Text(tag),
-                            visualDensity: VisualDensity.compact,
-                            onDeleted: () {
-                              selectedTags.value = selectedTags.value
-                                  .where((t) => t != tag)
-                                  .toList();
-                            },
-                          ),
-                      ],
-                    ),
-                  ],
-
-                  // Split bill indicator badge
-                  if (splitBillDetails.value != null) ...[
-                    const SizedBox(height: AppSpacing.xs + 2),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                        border: Border.all(
-                          color: scheme.primary.withValues(alpha: 0.25),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(LucideIcons.users, size: 16, color: scheme.primary),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text(
-                              'Patungan ${splitBillDetails.value!.personCount} orang • ${formatRupiah(splitBillDetails.value!.amountPerPerson)}/org',
-                              style: textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: scheme.primary,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            icon: const Icon(LucideIcons.x, size: 14),
-                            onPressed: () {
-                              splitBillDetails.value = null;
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.md),
-
-                  // 5. Action chips row [suara, scan struk, patungan, tanggal transaksi, tag]
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        // Tanggal Transaksi (default hari ini)
-                        ActionChip(
-                          avatar: const Icon(LucideIcons.calendar, size: 16),
-                          label: Text(dateLabel),
-                          backgroundColor: scheme.surfaceContainerHigh,
-                          onPressed: pickDate,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-
-                        // Suara
-                        ActionChip(
-                          avatar: const Icon(LucideIcons.mic, size: 16),
-                          label: const Text('Suara'),
-                          backgroundColor: scheme.surfaceContainerHigh,
-                          onPressed: handleVoiceInput,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-
-                        // Scan Struk
-                        ActionChip(
-                          avatar: const Icon(LucideIcons.scan_line, size: 16),
-                          label: const Text('Scan Struk'),
-                          backgroundColor: scheme.surfaceContainerHigh,
-                          onPressed: handleReceiptScan,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-
-                        // Patungan
-                        ActionChip(
-                          avatar: const Icon(LucideIcons.users, size: 16),
-                          label: Text(
-                            splitBillDetails.value != null
-                                ? 'Patungan (${splitBillDetails.value!.personCount})'
-                                : 'Patungan',
-                          ),
-                          backgroundColor: splitBillDetails.value != null
-                              ? scheme.primary.withValues(alpha: 0.2)
-                              : scheme.surfaceContainerHigh,
-                          onPressed: handleSplitBill,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-
-                        // Tag
-                        ActionChip(
-                          avatar: const Icon(LucideIcons.tag, size: 16),
-                          label: Text(
-                            selectedTags.value.isEmpty
-                                ? 'Tag'
-                                : '${selectedTags.value.length} Tag',
-                          ),
-                          backgroundColor: selectedTags.value.isNotEmpty
-                              ? scheme.primary.withValues(alpha: 0.2)
-                              : scheme.surfaceContainerHigh,
-                          onPressed: handlePickTags,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // 6. Budget (jika kategori terpilih masuk dalam pembudgetan)
+                  // 5. Budget (jika kategori terpilih masuk dalam pembudgetan)
                   if (isExpense.value && selectedCategory.value != null) ...[
                     BudgetInfoCard(
                       category: selectedCategory.value,
                       budget: activeBudget,
                       currentAmount: amount,
+                      currency: currentCurrency,
                       onCreateBudget: handleCreateQuickBudget,
                     ),
                     const SizedBox(height: AppSpacing.md),
                   ],
-
-                  // 7. Interactive Keypad
-                  if (isKeypadExpanded.value)
-                    AmountKeypad(
-                      onKey: (key) {
-                        if (key == 'backspace') {
-                          if (amountDigits.value.isNotEmpty) {
-                            amountDigits.value = amountDigits.value.substring(
-                              0,
-                              amountDigits.value.length - 1,
-                            );
-                          }
-                        } else if (key != '.' && amountDigits.value.length < 12) {
-                          amountDigits.value = amountDigits.value == '0'
-                              ? key
-                              : amountDigits.value + key;
-                        }
-                      },
-                    ),
                 ],
               ),
             ),
@@ -863,8 +931,8 @@ class AddTransactionScreen extends HookConsumerWidget {
                           const SizedBox(width: AppSpacing.sm),
                           Text(
                             isExpense.value
-                                ? 'Simpan Pengeluaran (${formatRupiah(amount)})'
-                                : 'Simpan Pemasukan (${formatRupiah(amount)})',
+                                ? 'Simpan Pengeluaran (${formatCurrencyInput(amount, currency: currentCurrency)})'
+                                : 'Simpan Pemasukan (${formatCurrencyInput(amount, currency: currentCurrency)})',
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ],

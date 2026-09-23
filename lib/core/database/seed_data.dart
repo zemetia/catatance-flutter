@@ -14,6 +14,7 @@ Future<void> seedInitialData(AppDatabase db) async {
           AccountsCompanion.insert(
             name: 'BCA',
             type: 'bank',
+            currencyCode: const Value('IDR'),
             initialBalanceCents: const Value(12500000),
             colorValue: const Value(0xFF1E88E5),
             isDefault: const Value(true),
@@ -25,6 +26,7 @@ Future<void> seedInitialData(AppDatabase db) async {
           AccountsCompanion.insert(
             name: 'Mandiri',
             type: 'bank',
+            currencyCode: const Value('IDR'),
             initialBalanceCents: const Value(5200000),
             colorValue: const Value(0xFFFFB300),
             isDefault: const Value(false),
@@ -36,6 +38,7 @@ Future<void> seedInitialData(AppDatabase db) async {
           AccountsCompanion.insert(
             name: 'GoPay',
             type: 'e-wallet',
+            currencyCode: const Value('IDR'),
             initialBalanceCents: const Value(750000),
             colorValue: const Value(0xFF00AED6),
             isDefault: const Value(false),
@@ -47,6 +50,7 @@ Future<void> seedInitialData(AppDatabase db) async {
           AccountsCompanion.insert(
             name: 'Dompet Tunai',
             type: 'cash',
+            currencyCode: const Value('IDR'),
             initialBalanceCents: const Value(850000),
             colorValue: const Value(0xFF43A047),
             isDefault: const Value(false),
@@ -58,50 +62,110 @@ Future<void> seedInitialData(AppDatabase db) async {
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Makanan & Minuman',
+            name: 'Makanan Kebutuhan',
             icon: 'utensils',
             type: 'expense',
             colorValue: 0xFFFF6B6B,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Nongkrong',
+            icon: 'coffee',
+            type: 'expense',
+            colorValue: 0xFFE8590C,
           ),
         );
     final catTransport = await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Transportasi',
+            name: 'Transport',
             icon: 'car',
             type: 'expense',
             colorValue: 0xFF339AF0,
           ),
         );
-    final catBelanja = await db
+    await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Belanja & Kebutuhan',
-            icon: 'shopping-bag',
+            name: 'BBM',
+            icon: 'fuel',
             type: 'expense',
-            colorValue: 0xFFCC5DE8,
+            colorValue: 0xFFF76707,
           ),
         );
-    final catTagihan = await db
+    await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Tagihan & Utilitas',
-            icon: 'zap',
+            name: 'Tol',
+            icon: 'route',
             type: 'expense',
-            colorValue: 0xFFFCC419,
+            colorValue: 0xFF495057,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Parkir',
+            icon: 'square-parking',
+            type: 'expense',
+            colorValue: 0xFF1C7ED6,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Langganan',
+            icon: 'repeat',
+            type: 'expense',
+            colorValue: 0xFF7048E8,
           ),
         );
     final catHiburan = await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Hiburan & Liburan',
+            name: 'Hiburan',
             icon: 'gamepad-2',
             type: 'expense',
             colorValue: 0xFFFF922B,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Streaming',
+            icon: 'tv',
+            type: 'expense',
+            colorValue: 0xFF9775FA,
+          ),
+        );
+    final catBelanja = await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Belanja',
+            icon: 'shopping-bag',
+            type: 'expense',
+            colorValue: 0xFFCC5DE8,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Fashion',
+            icon: 'shirt',
+            type: 'expense',
+            colorValue: 0xFFF06595,
           ),
         );
     final catKesehatan = await db
@@ -114,34 +178,364 @@ Future<void> seedInitialData(AppDatabase db) async {
             colorValue: 0xFF51CF66,
           ),
         );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Asuransi',
+            icon: 'shield',
+            type: 'expense',
+            colorValue: 0xFF15AABF,
+          ),
+        );
     final catPendidikan = await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Pendidikan',
+            name: 'Edukasi',
             icon: 'graduation-cap',
             type: 'expense',
             colorValue: 0xFF20C997,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Internet',
+            icon: 'wifi',
+            type: 'expense',
+            colorValue: 0xFF228BE6,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Pulsa/Kuota',
+            icon: 'smartphone',
+            type: 'expense',
+            colorValue: 0xFF4C6EF5,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Donasi',
+            icon: 'hand-heart',
+            type: 'expense',
+            colorValue: 0xFFE64980,
           ),
         );
     final catSosial = await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Hadiah & Sosial',
+            name: 'Memberkati',
             icon: 'gift',
             type: 'expense',
             colorValue: 0xFFFF8787,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Rumah',
+            icon: 'house',
+            type: 'expense',
+            colorValue: 0xFFAE8F6F,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Hutang',
+            icon: 'hand-coins',
+            type: 'expense',
+            colorValue: 0xFFE03131,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Cicilan',
+            icon: 'credit-card',
+            type: 'expense',
+            colorValue: 0xFF6C5CE7,
+          ),
+        );
+    final catTagihan = await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Listrik/Air',
+            icon: 'zap',
+            type: 'expense',
+            colorValue: 0xFFFCC419,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Anak',
+            icon: 'baby',
+            type: 'expense',
+            colorValue: 0xFFFFA8A8,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Hewan Peliharaan',
+            icon: 'dog',
+            type: 'expense',
+            colorValue: 0xFFD9822B,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Pengiriman',
+            icon: 'package',
+            type: 'expense',
+            colorValue: 0xFF868E96,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Game',
+            icon: 'joystick',
+            type: 'expense',
+            colorValue: 0xFF7950F2,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Kecantikan',
+            icon: 'sparkles',
+            type: 'expense',
+            colorValue: 0xFFF783AC,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Kebugaran',
+            icon: 'dumbbell',
+            type: 'expense',
+            colorValue: 0xFF12B886,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Rokok',
+            icon: 'cigarette',
+            type: 'expense',
+            colorValue: 0xFF495057,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Alkohol',
+            icon: 'wine',
+            type: 'expense',
+            colorValue: 0xFFC2255C,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Perjalanan',
+            icon: 'plane',
+            type: 'expense',
+            colorValue: 0xFF1C7ED6,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Hotel',
+            icon: 'hotel',
+            type: 'expense',
+            colorValue: 0xFF862E9C,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Laundry',
+            icon: 'washing-machine',
+            type: 'expense',
+            colorValue: 0xFF4DABF7,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Top up',
+            icon: 'wallet',
+            type: 'expense',
+            colorValue: 0xFF37B24D,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Gift',
+            icon: 'gift',
+            type: 'expense',
+            colorValue: 0xFFFF8787,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Aset Digital',
+            icon: 'bitcoin',
+            type: 'expense',
+            colorValue: 0xFFF08C00,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Dukungan Kreatifitas',
+            icon: 'palette',
+            type: 'expense',
+            colorValue: 0xFFAE3EC9,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Kencan',
+            icon: 'heart',
+            type: 'expense',
+            colorValue: 0xFFE64980,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'E-commerce',
+            icon: 'shopping-cart',
+            type: 'expense',
+            colorValue: 0xFFCC5DE8,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Sewa Fashion',
+            icon: 'shirt',
+            type: 'expense',
+            colorValue: 0xFFF06595,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'App store',
+            icon: 'app-window',
+            type: 'expense',
+            colorValue: 0xFF495057,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Kantor',
+            icon: 'briefcase',
+            type: 'expense',
+            colorValue: 0xFF5F3DC4,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Acara',
+            icon: 'party-popper',
+            type: 'expense',
+            colorValue: 0xFFF59F00,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Terapi',
+            icon: 'stethoscope',
+            type: 'expense',
+            colorValue: 0xFF51CF66,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Adjustment',
+            icon: 'scale',
+            type: 'expense',
+            colorValue: 0xFF868E96,
           ),
         );
     final catLainnya = await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Lain-lain',
+            name: 'Lainnya',
             icon: 'receipt',
             type: 'expense',
             colorValue: 0xFF868E96,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Biaya Admin Transfer',
+            icon: 'banknote',
+            type: 'expense',
+            colorValue: 0xFF868E96,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Transfer',
+            icon: 'arrow-left-right',
+            type: 'transfer',
+            colorValue: 0xFF3D7FFF,
           ),
         );
 
@@ -150,17 +544,37 @@ Future<void> seedInitialData(AppDatabase db) async {
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Gaji Bulanan',
+            name: 'Gaji',
             icon: 'briefcase',
             type: 'income',
             colorValue: 0xFF2F9E44,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Project Sampingan',
+            icon: 'briefcase-business',
+            type: 'income',
+            colorValue: 0xFF0CA678,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Passive Income',
+            icon: 'piggy-bank',
+            type: 'income',
+            colorValue: 0xFF37B24D,
           ),
         );
     final catBonus = await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Bonus & THR',
+            name: 'Bonus',
             icon: 'award',
             type: 'income',
             colorValue: 0xFF37B24D,
@@ -170,7 +584,7 @@ Future<void> seedInitialData(AppDatabase db) async {
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Hasil Investasi',
+            name: 'Investasi',
             icon: 'trending-up',
             type: 'income',
             colorValue: 0xFF1C7ED6,
@@ -180,24 +594,185 @@ Future<void> seedInitialData(AppDatabase db) async {
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Freelance & Projek',
+            name: 'Freelance',
             icon: 'laptop',
             type: 'income',
             colorValue: 0xFF1098AD,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Jual Barang',
+            icon: 'shopping-bag',
+            type: 'income',
+            colorValue: 0xFFCC5DE8,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Cashback',
+            icon: 'percent',
+            type: 'income',
+            colorValue: 0xFFF08C00,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Sewa',
+            icon: 'key',
+            type: 'income',
+            colorValue: 0xFFAE8F6F,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Royalti',
+            icon: 'coins',
+            type: 'income',
+            colorValue: 0xFFF59F00,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Deviden',
+            icon: 'landmark',
+            type: 'income',
+            colorValue: 0xFF1C7ED6,
           ),
         );
     final catUangMasuk = await db
         .into(db.categories)
         .insert(
           CategoriesCompanion.insert(
-            name: 'Hadiah & Uang Masuk',
-            icon: 'circle-dollar-sign',
+            name: 'Gift',
+            icon: 'gift',
             type: 'income',
             colorValue: 0xFF748FFC,
           ),
         );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Afiliasi',
+            icon: 'handshake',
+            type: 'income',
+            colorValue: 0xFF0CA678,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Sosial Media',
+            icon: 'at-sign',
+            type: 'income',
+            colorValue: 0xFFE64980,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Tip',
+            icon: 'hand-coins',
+            type: 'income',
+            colorValue: 0xFF37B24D,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Airdrop',
+            icon: 'gem',
+            type: 'income',
+            colorValue: 0xFF7950F2,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Pinjaman',
+            icon: 'hand-coins',
+            type: 'income',
+            colorValue: 0xFFE8590C,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Piutang',
+            icon: 'hand-coins',
+            type: 'income',
+            colorValue: 0xFF2F9E44,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Adjustment',
+            icon: 'scale',
+            type: 'income',
+            colorValue: 0xFF868E96,
+          ),
+        );
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Lainnya',
+            icon: 'receipt',
+            type: 'income',
+            colorValue: 0xFF868E96,
+          ),
+        );
 
-    // 3. Transactions
+    // 3. Budgets (Anggaran) — monthly limits for the most common expense
+    // categories, one with carry-over enabled as a demo.
+    await db
+        .into(db.budgets)
+        .insert(
+          BudgetsCompanion.insert(
+            categoryId: catMakan,
+            limitCents: 2000000,
+            periodType: const Value('monthly'),
+          ),
+        );
+    await db
+        .into(db.budgets)
+        .insert(
+          BudgetsCompanion.insert(
+            categoryId: catTransport,
+            limitCents: 800000,
+            periodType: const Value('monthly'),
+          ),
+        );
+    await db
+        .into(db.budgets)
+        .insert(
+          BudgetsCompanion.insert(
+            categoryId: catBelanja,
+            limitCents: 2000000,
+            periodType: const Value('monthly'),
+            carryOverEnabled: const Value(true),
+          ),
+        );
+
+    // 4. Transactions
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day, 12, 30);
 
@@ -607,5 +1182,235 @@ Future<void> seedInitialData(AppDatabase db) async {
             ),
           );
     }
+
+    // 5. Debts & Receivables (Utang & Piutang)
+    final seedNow = DateTime.now();
+
+    // 4.1 Utang ke Kak Sarah (aktif, ada cicilan)
+    final debtSarahId = await db.into(db.debts).insert(
+          DebtsCompanion.insert(
+            type: 'debt',
+            personName: 'Kak Sarah',
+            amountCents: 2500000,
+            paidAmountCents: const Value(1000000),
+            transactionDate: seedNow.subtract(const Duration(days: 15)),
+            dueDate: Value(seedNow.add(const Duration(days: 14))),
+            status: const Value('unpaid'),
+            note: const Value('Pinjam dana darurat servis motor'),
+            accountId: Value(bcaId),
+          ),
+        );
+    await db.into(db.debtPayments).insert(
+          DebtPaymentsCompanion.insert(
+            debtId: debtSarahId,
+            amountCents: 1000000,
+            paymentDate: seedNow.subtract(const Duration(days: 5)),
+            note: const Value('Cicilan pertama transfer BCA'),
+          ),
+        );
+
+    // 4.2 Piutang ke Rian Pratama (aktif, ada cicilan)
+    final recRianId = await db.into(db.debts).insert(
+          DebtsCompanion.insert(
+            type: 'receivable',
+            personName: 'Rian Pratama',
+            amountCents: 750000,
+            paidAmountCents: const Value(250000),
+            transactionDate: seedNow.subtract(const Duration(days: 10)),
+            dueDate: Value(seedNow.add(const Duration(days: 5))),
+            status: const Value('unpaid'),
+            note: const Value('Talangan tiket konser musik'),
+            accountId: Value(gopayId),
+          ),
+        );
+    await db.into(db.debtPayments).insert(
+          DebtPaymentsCompanion.insert(
+            debtId: recRianId,
+            amountCents: 250000,
+            paymentDate: seedNow.subtract(const Duration(days: 3)),
+            note: const Value('Transfer via GoPay'),
+          ),
+        );
+
+    // 4.3 Piutang ke Dimas Setiawan (lewat tempo)
+    await db.into(db.debts).insert(
+          DebtsCompanion.insert(
+            type: 'receivable',
+            personName: 'Dimas Setiawan',
+            amountCents: 300000,
+            paidAmountCents: const Value(0),
+            transactionDate: seedNow.subtract(const Duration(days: 20)),
+            dueDate: Value(seedNow.subtract(const Duration(days: 3))),
+            status: const Value('unpaid'),
+            note: const Value('Patungan makan malam & karaoke'),
+            accountId: Value(mandiriId),
+          ),
+        );
+
+    // 4.4 Utang ke Budi Santoso (lunas)
+    final debtBudiId = await db.into(db.debts).insert(
+          DebtsCompanion.insert(
+            type: 'debt',
+            personName: 'Budi Santoso',
+            amountCents: 500000,
+            paidAmountCents: const Value(500000),
+            transactionDate: seedNow.subtract(const Duration(days: 30)),
+            dueDate: Value(seedNow.subtract(const Duration(days: 10))),
+            status: const Value('paid'),
+            note: const Value('Beli perlengkapan kerja & kabel'),
+            accountId: Value(bcaId),
+          ),
+        );
+    await db.into(db.debtPayments).insert(
+          DebtPaymentsCompanion.insert(
+            debtId: debtBudiId,
+            amountCents: 500000,
+            paymentDate: seedNow.subtract(const Duration(days: 10)),
+            note: const Value('Pelunasan penuh via transfer Mandiri'),
+          ),
+        );
+
+    // 5. Target Tabungan (Savings Goals)
+    // 5.1 Liburan Bali (matching the user reference mock)
+    await db.into(db.savingsGoals).insert(
+          SavingsGoalsCompanion.insert(
+            name: 'Liburan Bali',
+            iconKey: const Value('plane'),
+            gradientIndex: const Value(1), // Periwinkle/Indigo
+            targetAmountCents: 10000000,
+            currentAmountCents: const Value(4500000),
+            targetDate: Value(seedNow.add(const Duration(days: 120))),
+            autoSaveEnabled: const Value(true),
+            autoSaveAmountCents: const Value(500000),
+            autoSaveFrequency: const Value('monthly'),
+            sourceAccountId: Value(bcaId),
+            note: const Value('Tabungan tiket pesawat dan hotel di Ubud & Seminyak'),
+          ),
+        );
+
+    // 5.2 Beli Laptop Kerja
+    await db.into(db.savingsGoals).insert(
+          SavingsGoalsCompanion.insert(
+            name: 'Beli Laptop Baru',
+            iconKey: const Value('laptop'),
+            gradientIndex: const Value(0), // Coral Rose
+            targetAmountCents: 18000000,
+            currentAmountCents: const Value(12000000),
+            targetDate: Value(seedNow.add(const Duration(days: 60))),
+            autoSaveEnabled: const Value(false),
+            autoSaveAmountCents: const Value(0),
+            autoSaveFrequency: const Value('monthly'),
+            sourceAccountId: Value(mandiriId),
+            note: const Value('Upgrade Macbook Pro untuk coding dan desain'),
+          ),
+        );
+
+    // 5.3 Dana Darurat (Tanpa deadline, autosave aktif)
+    await db.into(db.savingsGoals).insert(
+          SavingsGoalsCompanion.insert(
+            name: 'Dana Darurat',
+            iconKey: const Value('health'),
+            gradientIndex: const Value(2), // Emerald Mint
+            targetAmountCents: 30000000,
+            currentAmountCents: const Value(15000000),
+            autoSaveEnabled: const Value(true),
+            autoSaveAmountCents: const Value(1000000),
+            autoSaveFrequency: const Value('monthly'),
+            sourceAccountId: Value(bcaId),
+            note: const Value('Penyangga 6 bulan biaya hidup untuk keamanan finansial'),
+          ),
+        );
   });
+}
+
+/// Schema v13: expands the income/expense category set to the granular list
+/// used by [seedInitialData]. Renames the old broad categories in place (so
+/// existing transactions keep pointing at the same row) and inserts the
+/// newly added categories that didn't exist before.
+Future<void> expandCategoriesV13(AppDatabase db) async {
+  Future<void> rename(String oldName, String type, String newName, String newIcon) async {
+    await (db.update(db.categories)
+          ..where((c) => c.name.equals(oldName) & c.type.equals(type)))
+        .write(CategoriesCompanion(name: Value(newName), icon: Value(newIcon)));
+  }
+
+  await rename('Makanan & Minuman', 'expense', 'Makanan Kebutuhan', 'utensils');
+  await rename('Transportasi', 'expense', 'Transport', 'car');
+  await rename('Belanja & Kebutuhan', 'expense', 'Belanja', 'shopping-bag');
+  await rename('Tagihan & Utilitas', 'expense', 'Listrik/Air', 'zap');
+  await rename('Hiburan & Liburan', 'expense', 'Hiburan', 'gamepad-2');
+  await rename('Pendidikan', 'expense', 'Edukasi', 'graduation-cap');
+  await rename('Hadiah & Sosial', 'expense', 'Memberkati', 'gift');
+  await rename('Lain-lain', 'expense', 'Lainnya', 'receipt');
+  await rename('Cicilan & Pinjaman', 'expense', 'Cicilan', 'credit-card');
+  await rename('Gaji Bulanan', 'income', 'Gaji', 'briefcase');
+  await rename('Bonus & THR', 'income', 'Bonus', 'award');
+  await rename('Hasil Investasi', 'income', 'Investasi', 'trending-up');
+  await rename('Freelance & Projek', 'income', 'Freelance', 'laptop');
+  await rename('Hadiah & Uang Masuk', 'income', 'Gift', 'gift');
+
+  Future<void> add(String name, String icon, String type, int colorValue) async {
+    await db.into(db.categories).insert(
+          CategoriesCompanion.insert(
+            name: name,
+            icon: icon,
+            type: type,
+            colorValue: colorValue,
+          ),
+        );
+  }
+
+  // New expense categories.
+  await add('Nongkrong', 'coffee', 'expense', 0xFFE8590C);
+  await add('BBM', 'fuel', 'expense', 0xFFF76707);
+  await add('Tol', 'route', 'expense', 0xFF495057);
+  await add('Parkir', 'square-parking', 'expense', 0xFF1C7ED6);
+  await add('Langganan', 'repeat', 'expense', 0xFF7048E8);
+  await add('Streaming', 'tv', 'expense', 0xFF9775FA);
+  await add('Fashion', 'shirt', 'expense', 0xFFF06595);
+  await add('Asuransi', 'shield', 'expense', 0xFF15AABF);
+  await add('Internet', 'wifi', 'expense', 0xFF228BE6);
+  await add('Pulsa/Kuota', 'smartphone', 'expense', 0xFF4C6EF5);
+  await add('Donasi', 'hand-heart', 'expense', 0xFFE64980);
+  await add('Rumah', 'house', 'expense', 0xFFAE8F6F);
+  await add('Hutang', 'hand-coins', 'expense', 0xFFE03131);
+  await add('Anak', 'baby', 'expense', 0xFFFFA8A8);
+  await add('Hewan Peliharaan', 'dog', 'expense', 0xFFD9822B);
+  await add('Pengiriman', 'package', 'expense', 0xFF868E96);
+  await add('Game', 'joystick', 'expense', 0xFF7950F2);
+  await add('Kecantikan', 'sparkles', 'expense', 0xFFF783AC);
+  await add('Kebugaran', 'dumbbell', 'expense', 0xFF12B886);
+  await add('Rokok', 'cigarette', 'expense', 0xFF495057);
+  await add('Alkohol', 'wine', 'expense', 0xFFC2255C);
+  await add('Perjalanan', 'plane', 'expense', 0xFF1C7ED6);
+  await add('Hotel', 'hotel', 'expense', 0xFF862E9C);
+  await add('Laundry', 'washing-machine', 'expense', 0xFF4DABF7);
+  await add('Top up', 'wallet', 'expense', 0xFF37B24D);
+  await add('Gift', 'gift', 'expense', 0xFFFF8787);
+  await add('Aset Digital', 'bitcoin', 'expense', 0xFFF08C00);
+  await add('Dukungan Kreatifitas', 'palette', 'expense', 0xFFAE3EC9);
+  await add('Kencan', 'heart', 'expense', 0xFFE64980);
+  await add('E-commerce', 'shopping-cart', 'expense', 0xFFCC5DE8);
+  await add('Sewa Fashion', 'shirt', 'expense', 0xFFF06595);
+  await add('App store', 'app-window', 'expense', 0xFF495057);
+  await add('Kantor', 'briefcase', 'expense', 0xFF5F3DC4);
+  await add('Acara', 'party-popper', 'expense', 0xFFF59F00);
+  await add('Terapi', 'stethoscope', 'expense', 0xFF51CF66);
+  await add('Adjustment', 'scale', 'expense', 0xFF868E96);
+
+  // New income categories.
+  await add('Project Sampingan', 'briefcase-business', 'income', 0xFF0CA678);
+  await add('Passive Income', 'piggy-bank', 'income', 0xFF37B24D);
+  await add('Jual Barang', 'shopping-bag', 'income', 0xFFCC5DE8);
+  await add('Cashback', 'percent', 'income', 0xFFF08C00);
+  await add('Sewa', 'key', 'income', 0xFFAE8F6F);
+  await add('Royalti', 'coins', 'income', 0xFFF59F00);
+  await add('Deviden', 'landmark', 'income', 0xFF1C7ED6);
+  await add('Afiliasi', 'handshake', 'income', 0xFF0CA678);
+  await add('Sosial Media', 'at-sign', 'income', 0xFFE64980);
+  await add('Tip', 'hand-coins', 'income', 0xFF37B24D);
+  await add('Airdrop', 'gem', 'income', 0xFF7950F2);
+  await add('Pinjaman', 'hand-coins', 'income', 0xFFE8590C);
+  await add('Adjustment', 'scale', 'income', 0xFF868E96);
+  await add('Lainnya', 'receipt', 'income', 0xFF868E96);
 }

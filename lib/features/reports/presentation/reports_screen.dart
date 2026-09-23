@@ -8,8 +8,10 @@ import '../../../core/widgets/widgets.dart';
 import 'reports_providers.dart';
 import 'widgets/category_donut_card.dart';
 import 'widgets/expense_bar_chart_card.dart';
+import 'widgets/month_summary_card.dart';
 import 'widgets/monthly_trend_card.dart';
 import 'widgets/net_worth_card.dart';
+import 'widgets/report_mode_switch.dart';
 import 'widgets/report_month_selector.dart';
 import 'widgets/top_categories_card.dart';
 
@@ -25,6 +27,7 @@ class ReportsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedMonth = ref.watch(selectedReportMonthProvider);
+    final selectedMode = ref.watch(selectedReportModeProvider);
     final months = reportMonthOptions();
 
     final menuItems = [
@@ -99,6 +102,12 @@ class ReportsScreen extends ConsumerWidget {
               selected: selectedMonth,
               onSelected: (month) =>
                   ref.read(selectedReportMonthProvider.notifier).state = month,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            ReportModeSwitch(
+              selected: selectedMode,
+              onChanged: (mode) =>
+                  ref.read(selectedReportModeProvider.notifier).state = mode,
             ),
             const SizedBox(height: AppSpacing.md),
             NetWorthCard(onTap: () => _comingSoon(context, 'Detail kekayaan bersih')),

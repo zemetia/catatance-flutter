@@ -80,36 +80,6 @@ final notificationSettingsProvider = StateProvider<NotificationSettings>(
   (ref) => const NotificationSettings(),
 );
 
-/// Toggle set for "Keamanan". PIN entry itself isn't built yet, so enabling
-/// app lock just flips the switch — no PIN-creation flow behind it.
-class SecuritySettings {
-  const SecuritySettings({
-    this.appLockEnabled = false,
-    this.biometricEnabled = false,
-    this.hideBalance = false,
-  });
-
-  final bool appLockEnabled;
-  final bool biometricEnabled;
-  final bool hideBalance;
-
-  SecuritySettings copyWith({
-    bool? appLockEnabled,
-    bool? biometricEnabled,
-    bool? hideBalance,
-  }) {
-    return SecuritySettings(
-      appLockEnabled: appLockEnabled ?? this.appLockEnabled,
-      biometricEnabled: biometricEnabled ?? this.biometricEnabled,
-      hideBalance: hideBalance ?? this.hideBalance,
-    );
-  }
-}
-
-final securitySettingsProvider = StateProvider<SecuritySettings>(
-  (ref) => const SecuritySettings(),
-);
-
 /// Number-format style for "Preferensi" — Rupiah is the only currency for
 /// now, so this only affects thousands/decimal separators.
 enum NumberFormatStyle {

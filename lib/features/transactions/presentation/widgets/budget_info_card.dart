@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 
+import '../../../../core/constants/currencies.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
@@ -18,6 +19,7 @@ class BudgetInfoCard extends StatelessWidget {
     required this.budget,
     required this.currentAmount,
     this.onCreateBudget,
+    this.currency = defaultCurrency,
     super.key,
   });
 
@@ -25,6 +27,7 @@ class BudgetInfoCard extends StatelessWidget {
   final BudgetItem? budget;
   final int currentAmount;
   final VoidCallback? onCreateBudget;
+  final Currency currency;
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +146,7 @@ class BudgetInfoCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Terpakai: ${formatRupiahCompact(b.spentCents)} / ${formatRupiahCompact(b.limitCents)}',
+                  'Terpakai: ${formatCurrencyCompact(b.spentCents, currency: currency)} / ${formatCurrencyCompact(b.limitCents, currency: currency)}',
                   style: textTheme.bodySmall?.copyWith(color: scheme.outline),
                 ),
                 Text(
@@ -159,8 +162,8 @@ class BudgetInfoCard extends StatelessWidget {
             if (currentAmount > 0)
               Text(
                 isOverBudget
-                    ? '⚠️ Melebihi sisa limit sebesar ${formatRupiah(newSpent - b.limitCents)}!'
-                    : 'Sisa anggaran setelah transaksi: ${formatRupiah(remainingAfter)}',
+                    ? '⚠️ Melebihi sisa limit sebesar ${formatCurrencyInput(newSpent - b.limitCents, currency: currency)}!'
+                    : 'Sisa anggaran setelah transaksi: ${formatCurrencyInput(remainingAfter, currency: currency)}',
                 style: textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: isOverBudget ? AppColors.expense : AppColors.income,

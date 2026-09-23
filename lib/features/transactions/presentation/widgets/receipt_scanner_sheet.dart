@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 
+import '../../../../core/constants/currencies.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
 
@@ -19,7 +20,10 @@ class ReceiptScanResult {
 }
 
 /// Bottom sheet simulating receipt OCR camera scanner with sample receipts.
-Future<ReceiptScanResult?> showReceiptScannerSheet(BuildContext context) {
+Future<ReceiptScanResult?> showReceiptScannerSheet(
+  BuildContext context, {
+  Currency currency = defaultCurrency,
+}) {
   return showModalBottomSheet<ReceiptScanResult>(
     context: context,
     showDragHandle: true,
@@ -28,12 +32,14 @@ Future<ReceiptScanResult?> showReceiptScannerSheet(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
     ),
-    builder: (context) => const _ReceiptScannerSheet(),
+    builder: (context) => _ReceiptScannerSheet(currency: currency),
   );
 }
 
 class _ReceiptScannerSheet extends HookWidget {
-  const _ReceiptScannerSheet();
+  const _ReceiptScannerSheet({this.currency = defaultCurrency});
+
+  final Currency currency;
 
   static const _receiptSamples = [
     (
@@ -243,7 +249,7 @@ class _ReceiptScannerSheet extends HookWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            formatRupiah(selectedSample.value!.amount),
+                            formatCurrencyInput(selectedSample.value!.amount, currency: currency),
                             style: TextStyle(
                               color: scheme.primary,
                               fontWeight: FontWeight.w900,
@@ -286,7 +292,7 @@ class _ReceiptScannerSheet extends HookWidget {
                 for (final s in _receiptSamples)
                   ChoiceChip(
                     avatar: const Icon(LucideIcons.receipt, size: 14),
-                    label: Text('${s.merchant} (${formatRupiahCompact(s.amount)})'),
+                    label: Text('${s.merchant} (${formatCurrencyCompact(s.amount, currency: currency)})'),
                     selected: selectedSample.value?.merchant == s.merchant,
                     onSelected: (_) => simulateScan(s),
                   ),
@@ -309,7 +315,7 @@ class _ReceiptScannerSheet extends HookWidget {
                     },
               icon: const Icon(LucideIcons.circle_check, size: 18),
               label: Text(
-                'Terapkan Struk (${formatRupiah(selectedSample.value?.amount ?? 0)})',
+                'Terapkan Struk (${formatCurrencyInput(selectedSample.value?.amount ?? 0, currency: currency)})',
               ),
             ),
           ],

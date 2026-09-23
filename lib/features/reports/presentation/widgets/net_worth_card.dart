@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/security/security_providers.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -18,6 +19,7 @@ class NetWorthCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final netWorth = ref.watch(netWorthProvider);
+    final hideBalance = ref.watch(hideBalanceProvider);
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -37,10 +39,20 @@ class NetWorthCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 netWorth.when(
-                  data: (value) => Text(
-                    formatRupiahCompact(value),
-                    style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                  ),
+                  data: (value) => hideBalance
+                      ? HoldToReveal(
+                          builder: (context, revealed) => Text(
+                            revealed ? formatRupiahCompact(value) : 'Rp ••••••••',
+                            style: textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: revealed ? null : scheme.outline,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          formatRupiahCompact(value),
+                          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                        ),
                   loading: () => const ReportShimmerBox(width: 100, height: 22),
                   error: (err, st) => Text('—', style: textTheme.titleLarge),
                 ),

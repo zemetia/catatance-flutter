@@ -4,6 +4,8 @@ class Accounts extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   TextColumn get type => text()(); // cash, bank, e-wallet, card, savings, other
+  TextColumn get currencyCode =>
+      text().withDefault(const Constant('IDR'))(); // ISO 4217 code (IDR, USD, etc.)
   IntColumn get initialBalanceCents =>
       integer().withDefault(const Constant(0))();
   IntColumn get colorValue =>

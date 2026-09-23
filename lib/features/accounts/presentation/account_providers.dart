@@ -34,12 +34,28 @@ class WalletActionNotifier extends AsyncNotifier<void> {
     required int fromId,
     required int toId,
     required int amountCents,
+    required int convertedAmountCents,
+    int feeCents = 0,
+    int? feeCategoryId,
   }) async {
     state = const AsyncLoading();
     final repo = ref.read(accountRepositoryProvider);
     state = await AsyncValue.guard(
-      () => repo.transfer(fromId: fromId, toId: toId, amountCents: amountCents),
+      () => repo.transfer(
+        fromId: fromId,
+        toId: toId,
+        amountCents: amountCents,
+        convertedAmountCents: convertedAmountCents,
+        feeCents: feeCents,
+        feeCategoryId: feeCategoryId,
+      ),
     );
+  }
+
+  Future<void> updateWallet(int id, AccountDraft draft) async {
+    state = const AsyncLoading();
+    final repo = ref.read(accountRepositoryProvider);
+    state = await AsyncValue.guard(() => repo.update(id, draft));
   }
 
   Future<void> deleteWallet(int id) async {

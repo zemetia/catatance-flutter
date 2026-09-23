@@ -54,17 +54,44 @@ lib/
 │   │       │                      # ("Dompet baru"), wallet_transfer_screen.dart
 │   │       └── widgets/           # amount_keypad.dart, wallet_picker_sheet.dart
 │   ├── budget/
-│   │   └── presentation/          # budget_screen.dart, budget_providers.dart
-│   │       └── widgets/           # progress/goal/wallet summary cards
+│   │   ├── data/                  # budget_repository.dart
+│   │   ├── domain/                # budget.dart, budget_period_type.dart
+│   │   └── presentation/          # budget_screen.dart (Anggaran tab), budget_list_screen.dart
+│   │       │                      # ("Semua Anggaran"), budget_form_screen.dart (create/edit),
+│   │       │                      # budget_providers.dart
+│   │       └── widgets/           # progress/goal/wallet summary cards, category picker sheet
 │   ├── profile/
 │   │   └── presentation/          # profile_screen.dart
 │   │       └── widgets/           # header/balance cards
-│   └── reports/
-│       ├── data/                  # reports_repository.dart
-│       ├── domain/                # report_models.dart (freezed)
-│       └── presentation/          # multiple report screens (bulanan, kalender, proyeksi, radar harga)
-│           └── widgets/           # charts (fl_chart) and shimmer placeholders
-│
+│   ├── debts/
+│   │   ├── data/                  # debt_repository.dart
+│   │   ├── domain/                # debt.dart, debt_payment.dart, debt_type.dart
+│   │   └── presentation/          # debt_providers.dart, debt_list_screen.dart,
+│   │       │                      # debt_form_screen.dart, debt_detail_screen.dart
+│   │       └── widgets/           # debt_card.dart, debt_summary_header.dart, payment_bottom_sheet.dart
+│   ├── reports/
+│   │   ├── data/                  # reports_repository.dart
+│   │   ├── domain/                # report_models.dart (freezed)
+│   │   └── presentation/          # multiple report screens (bulanan, kalender, proyeksi, radar harga)
+│   │       └── widgets/           # charts (fl_chart) and shimmer placeholders
+│   ├── split_bills/                # Patungan (group bill): pay for a group, one expense
+│   │   ├── data/                  # split_bill_repository.dart
+│   │   ├── domain/                # split_bill.dart
+│   │   └── presentation/          # split_bill_providers.dart, split_bill_form_screen.dart
+│   │                              # (route /split-bills/new, opened from AddTransactionScreen's
+│   │                              #  "Patungan" chip); participant shares become Debts
+│   │                              #  (type=receivable) rows via Debts.splitBillId, so
+│   │                              #  repayment reuses the existing debts feature as-is
+│   ├── installments/               # Cicilan: fixed monthly amount over a fixed tenor
+│   │   ├── data/                  # installment_repository.dart
+│   │   ├── domain/                # installment.dart, installment_payment.dart, installment_status.dart
+│   │   └── presentation/          # installment_providers.dart, installment_list_screen.dart,
+│   │       │                      # installment_form_screen.dart (route /installments/new,
+│   │       │                      # /installments/:id/edit), installment_detail_screen.dart
+│   │       │                      # (route /installments/:id, opened from Profile > "Cicilan")
+│   │       └── widgets/           # installment_card.dart, installment_summary_header.dart,
+│   │                              # installment_payment_bottom_sheet.dart, category_picker_sheet.dart
+│   │
 test/
 └── widget_test.dart               # default smoke test only — no per-feature tests yet
 ```

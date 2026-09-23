@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 
+import '../../../../core/constants/currencies.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
 
@@ -21,7 +22,10 @@ class VoiceInputResult {
 }
 
 /// Bottom sheet for voice transaction recording & simulated speech-to-text recognition.
-Future<VoiceInputResult?> showVoiceInputSheet(BuildContext context) {
+Future<VoiceInputResult?> showVoiceInputSheet(
+  BuildContext context, {
+  Currency currency = defaultCurrency,
+}) {
   return showModalBottomSheet<VoiceInputResult>(
     context: context,
     showDragHandle: true,
@@ -30,12 +34,14 @@ Future<VoiceInputResult?> showVoiceInputSheet(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
     ),
-    builder: (context) => const _VoiceInputSheet(),
+    builder: (context) => _VoiceInputSheet(currency: currency),
   );
 }
 
 class _VoiceInputSheet extends HookWidget {
-  const _VoiceInputSheet();
+  const _VoiceInputSheet({this.currency = defaultCurrency});
+
+  final Currency currency;
 
   static const _samples = [
     (
@@ -251,7 +257,7 @@ class _VoiceInputSheet extends HookWidget {
                             style: textTheme.bodySmall?.copyWith(color: scheme.outline),
                           ),
                           Text(
-                            'Nominal: ${formatRupiah(extractedAmount.value!)}',
+                            'Nominal: ${formatCurrencyInput(extractedAmount.value!, currency: currency)}',
                             style: textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),

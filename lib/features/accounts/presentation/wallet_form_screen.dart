@@ -4,6 +4,7 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../core/constants/currencies.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
@@ -11,10 +12,16 @@ import '../data/account_repository.dart';
 import '../domain/account.dart';
 import 'account_providers.dart';
 import 'widgets/amount_keypad.dart';
+import 'widgets/currency_picker_sheet.dart';
 
-/// "Dompet baru" — create a new wallet/account.
+/// "Dompet baru" / "Edit dompet" — create a new wallet/account, or edit an
+/// existing one when [accountId] is provided.
 class WalletFormScreen extends HookConsumerWidget {
-  const WalletFormScreen({super.key});
+  const WalletFormScreen({super.key, this.accountId});
+
+  final int? accountId;
+
+  bool get _isEditing => accountId != null;
 
   static const _types = [
     AccountType.bank,
@@ -30,13 +37,33 @@ class WalletFormScreen extends HookConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    final existingAccount = _isEditing
+        ? ref
+              .watch(accountListProvider)
+              .value
+              ?.where((a) => a.id == accountId)
+              .firstOrNull
+        : null;
+
     final amountDigits = useState('');
     final nameController = useTextEditingController();
     final name = useValueListenable(nameController);
     final selectedType = useState(AccountType.bank);
+    final selectedCurrency = useState<Currency>(defaultCurrency);
     final selectedColor = useState(AppColors.walletPalette.first);
     final isDefault = useState(false);
     final amountEntryOpen = useState(false);
+    final prefilled = useState(false);
+
+    if (existingAccount != null && !prefilled.value) {
+      prefilled.value = true;
+      nameController.text = existingAccount.name;
+      selectedType.value = existingAccount.type;
+      selectedCurrency.value = existingAccount.currency;
+      selectedColor.value = existingAccount.color;
+      isDefault.value = existingAccount.isDefault;
+      amountDigits.value = existingAccount.balanceCents.toString();
+    }
 
     final actionState = ref.watch(walletActionProvider);
     final canSubmit =
@@ -47,15 +74,19 @@ class WalletFormScreen extends HookConsumerWidget {
 
     Future<void> submit() async {
       final notifier = ref.read(walletActionProvider.notifier);
-      await notifier.createWallet(
-        AccountDraft(
-          name: name.text.trim(),
-          type: selectedType.value,
-          initialBalanceCents: amount,
-          colorValue: selectedColor.value.toARGB32(),
-          isDefault: isDefault.value,
-        ),
+      final draft = AccountDraft(
+        name: name.text.trim(),
+        type: selectedType.value,
+        currencyCode: selectedCurrency.value.code,
+        initialBalanceCents: amount,
+        colorValue: selectedColor.value.toARGB32(),
+        isDefault: isDefault.value,
       );
+      if (_isEditing) {
+        await notifier.updateWallet(accountId!, draft);
+      } else {
+        await notifier.createWallet(draft);
+      }
       if (context.mounted && ref.read(walletActionProvider).hasError == false) {
         context.pop();
       }
@@ -67,7 +98,7 @@ class WalletFormScreen extends HookConsumerWidget {
           icon: const Icon(LucideIcons.x),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Dompet baru'),
+        title: Text(_isEditing ? 'Edit dompet' : 'Dompet baru'),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -81,6 +112,7 @@ class WalletFormScreen extends HookConsumerWidget {
           children: [
             _SaldoAwalCard(
               amountCents: amount,
+              currency: selectedCurrency.value,
               expanded: amountEntryOpen.value,
               onTap: () => amountEntryOpen.value = !amountEntryOpen.value,
             ),
@@ -108,14 +140,21 @@ class WalletFormScreen extends HookConsumerWidget {
               controller: nameController,
               decoration: const InputDecoration(
                 labelText: 'Nama dompet',
-                hintText: 'cth: BCA Utama',
+                hintText: 'cth: BCA Utama, PayPal USD, dll',
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            _StaticField(
-              icon: LucideIcons.repeat,
-              label: 'Mata uang',
-              value: 'IDR · Rp',
+            _CurrencyField(
+              currency: selectedCurrency.value,
+              onTap: () async {
+                final picked = await showCurrencyPickerSheet(
+                  context,
+                  selected: selectedCurrency.value,
+                );
+                if (picked != null) {
+                  selectedCurrency.value = picked;
+                }
+              },
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -188,12 +227,12 @@ class WalletFormScreen extends HookConsumerWidget {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Row(
+                  : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Buat dompet'),
-                        SizedBox(width: AppSpacing.xs),
-                        Icon(LucideIcons.arrow_right, size: 18),
+                        Text(_isEditing ? 'Simpan perubahan' : 'Buat dompet'),
+                        const SizedBox(width: AppSpacing.xs),
+                        const Icon(LucideIcons.arrow_right, size: 18),
                       ],
                     ),
             ),
@@ -207,11 +246,13 @@ class WalletFormScreen extends HookConsumerWidget {
 class _SaldoAwalCard extends StatelessWidget {
   const _SaldoAwalCard({
     required this.amountCents,
+    required this.currency,
     required this.expanded,
     required this.onTap,
   });
 
   final int amountCents;
+  final Currency currency;
   final bool expanded;
   final VoidCallback onTap;
 
@@ -239,14 +280,14 @@ class _SaldoAwalCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                formatRupiah(amountCents),
+                formatCurrency(amountCents, currency: currency),
                 style: textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Saldo mulai dompet ini',
+                'Saldo mulai dompet ini (${currency.code})',
                 style: textTheme.bodySmall?.copyWith(color: scheme.outline),
               ),
             ],
@@ -257,54 +298,73 @@ class _SaldoAwalCard extends StatelessWidget {
   }
 }
 
-class _StaticField extends StatelessWidget {
-  const _StaticField({
-    required this.icon,
-    required this.label,
-    required this.value,
+class _CurrencyField extends StatelessWidget {
+  const _CurrencyField({
+    required this.currency,
+    required this.onTap,
   });
 
-  final IconData icon;
-  final String label;
-  final String value;
+  final Currency currency;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
+    return Material(
+      color: scheme.surfaceContainerHigh,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: scheme.outline),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: textTheme.bodySmall?.copyWith(color: scheme.outline),
-                ),
-                Text(
-                  value,
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
-          Icon(LucideIcons.chevrons_up_down, size: 18, color: scheme.outline),
-        ],
+          child: Row(
+            children: [
+              Text(
+                currency.flag,
+                style: const TextStyle(fontSize: 24),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mata uang',
+                      style: textTheme.bodySmall?.copyWith(color: scheme.outline),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          '${currency.code} · ${currency.symbol}',
+                          style: textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: Text(
+                            '(${currency.nameId})',
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: scheme.outline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(LucideIcons.chevrons_up_down, size: 18, color: scheme.outline),
+            ],
+          ),
+        ),
       ),
     );
   }

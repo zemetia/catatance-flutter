@@ -47,3 +47,9 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // NotificationManagerCompat, used by the bank-notification-listener
+    // status check in MainActivity.
+    implementation("androidx.core:core-ktx:1.13.1")
+}

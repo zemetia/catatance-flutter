@@ -3,7 +3,6 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/account.dart';
 
@@ -139,11 +138,20 @@ class _WalletOption extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Text(
-                      formatRupiahCompact(account.balanceCents),
-                      style: textTheme.bodySmall?.copyWith(
-                        color: scheme.outline,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          account.currency.flag,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          account.formattedBalanceCompact,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: scheme.outline,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

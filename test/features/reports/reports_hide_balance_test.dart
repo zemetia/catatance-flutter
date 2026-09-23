@@ -111,7 +111,7 @@ void main() {
 
       // CategoryDonutCard: percentage masked with ••% and center prompt present
       expect(find.text('••%'), findsOneWidget);
-      expect(find.text('Tahan untuk lihat total'), findsOneWidget);
+      expect(find.text('Ketuk untuk lihat total'), findsOneWidget);
 
       // NetWorthCard: masked with Rp ••••••••
       expect(find.text('Rp ••••••••'), findsOneWidget);

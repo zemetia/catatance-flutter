@@ -33,3 +33,15 @@ abstract class MonthlySpending with _$MonthlySpending {
     required int totalCents,
   }) = _MonthlySpending;
 }
+
+/// Which side of the ledger the statistics screen is currently showing.
+/// [net] combines both: income counts positive, expense counts negative.
+enum ReportMode { expense, income, net }
+
+extension ReportModeLabel on ReportMode {
+  String get label => switch (this) {
+    ReportMode.expense => 'Pengeluaran',
+    ReportMode.income => 'Pemasukan',
+    ReportMode.net => 'Bersih',
+  };
+}

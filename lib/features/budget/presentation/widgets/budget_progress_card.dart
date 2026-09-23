@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -32,16 +33,24 @@ class BudgetProgressCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final statusColor = _statusColor(context);
     final caption = budget.status == BudgetStatus.over
-        ? 'Melebihi anggaran • ${budget.daysLeft} hari'
-        : '${formatRupiahCompact(budget.remainingCents)} tersisa • ${budget.daysLeft} hari';
+        ? 'Melebihi anggaran • ${budget.periodLabel}'
+        : '${formatRupiahCompact(budget.remainingCents)} tersisa • ${budget.periodLabel}';
 
     return AppCard(
       delay: delay,
       onTap: onTap,
+      color: statusColor.withValues(alpha: 0.06),
+      backgroundLayers: [
+        Positioned(
+          right: -28,
+          top: -28,
+          child: DecorativeCircle(size: 92, color: statusColor, alpha: 0.08),
+        ),
+      ],
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconBadge(icon: budget.icon, shape: BoxShape.rectangle),
+          IconBadge(icon: budget.icon, color: statusColor, shape: BoxShape.rectangle),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
@@ -50,13 +59,24 @@ class BudgetProgressCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        budget.name,
-                        style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              budget.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          if (budget.carryOverCents > 0) ...[
+                            const SizedBox(width: AppSpacing.xs),
+                            Icon(LucideIcons.repeat, size: 13, color: statusColor),
+                          ],
+                        ],
                       ),
                     ),
                     Text(
-                      '${formatRupiahCompact(budget.spentCents)} of ${formatRupiahCompact(budget.limitCents)}',
+                      '${formatRupiahCompact(budget.spentCents)} of ${formatRupiahCompact(budget.totalLimitCents)}',
                       style: textTheme.bodySmall?.copyWith(color: scheme.outline),
                     ),
                   ],
@@ -66,8 +86,8 @@ class BudgetProgressCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   child: LinearProgressIndicator(
                     value: budget.progress == 0 ? 0.02 : budget.progress,
-                    minHeight: 6,
-                    backgroundColor: scheme.outline.withValues(alpha: 0.15),
+                    minHeight: 8,
+                    backgroundColor: statusColor.withValues(alpha: 0.14),
                     color: statusColor,
                   ),
                 ),

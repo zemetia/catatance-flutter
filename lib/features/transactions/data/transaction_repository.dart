@@ -9,6 +9,7 @@ class TransactionRepository {
   final AppDatabase _db;
 
   Stream<List<TransactionItem>> watchRecent({int limit = 50}) {
+    final toAccount = _db.accounts.createAlias('to_account');
     final query = _db.select(_db.transactions).join([
       innerJoin(
         _db.accounts,
@@ -17,6 +18,10 @@ class TransactionRepository {
       innerJoin(
         _db.categories,
         _db.categories.id.equalsExp(_db.transactions.categoryId),
+      ),
+      leftOuterJoin(
+        toAccount,
+        toAccount.id.equalsExp(_db.transactions.toAccountId),
       ),
     ])
       ..orderBy([
@@ -30,10 +35,12 @@ class TransactionRepository {
         final tx = row.readTable(_db.transactions);
         final account = row.readTable(_db.accounts);
         final category = row.readTable(_db.categories);
+        final destination = row.readTableOrNull(toAccount);
         return TransactionItem(
           id: tx.id,
           accountId: account.id,
           accountName: account.name,
+          accountCurrencyCode: account.currencyCode,
           categoryId: category.id,
           categoryName: category.name,
           categoryIcon: category.icon,
@@ -43,6 +50,7 @@ class TransactionRepository {
           note: tx.note,
           date: tx.date,
           createdAt: tx.createdAt,
+          toAccountName: destination?.name,
         );
       }).toList();
     });
@@ -54,6 +62,7 @@ class TransactionRepository {
     required int amountCents,
     String? note,
     required DateTime date,
+    int? savingsGoalId,
   }) {
     return _db.transaction(() async {
       final category = await (_db.select(_db.categories)
@@ -72,7 +81,7 @@ class TransactionRepository {
         AccountsCompanion(initialBalanceCents: Value(newBalance)),
       );
 
-      return _db.into(_db.transactions).insert(
+      final id = await _db.into(_db.transactions).insert(
             TransactionsCompanion.insert(
               accountId: accountId,
               categoryId: categoryId,
@@ -81,6 +90,27 @@ class TransactionRepository {
               date: date,
             ),
           );
+
+      // Income earmarked for a savings target: credits the goal's saved
+      // amount directly, on top of the wallet balance already credited
+      // above — unlike SavingsGoalRepository.deposit, it never deducts the
+      // wallet again, since this money was earned, not moved from savings.
+      if (isIncome && savingsGoalId != null) {
+        final goal = await (_db.select(_db.savingsGoals)
+              ..where((s) => s.id.equals(savingsGoalId)))
+            .getSingleOrNull();
+        if (goal != null) {
+          await (_db.update(_db.savingsGoals)
+                ..where((s) => s.id.equals(savingsGoalId)))
+              .write(
+            SavingsGoalsCompanion(
+              currentAmountCents: Value(goal.currentAmountCents + amountCents),
+            ),
+          );
+        }
+      }
+
+      return id;
     });
   }
 

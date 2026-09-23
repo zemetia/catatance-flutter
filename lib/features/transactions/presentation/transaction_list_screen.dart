@@ -27,6 +27,13 @@ class TransactionListScreen extends ConsumerWidget {
                 onPressed: () => context.pop(),
               )
             : null,
+        actions: [
+          IconButton(
+            tooltip: 'Transaksi Batch',
+            icon: const Icon(LucideIcons.layers),
+            onPressed: () => context.push('/transactions/batch'),
+          ),
+        ],
       ),
       body: SafeArea(
         child: transactionsAsync.when(

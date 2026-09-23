@@ -3,25 +3,26 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/report_models.dart';
 import '../reports_providers.dart';
-import 'report_bar_column.dart';
+import 'report_interactive_bar_chart.dart';
 import 'report_shimmer_box.dart';
 
-/// "Tren 5 bulan" card: total expense per month for the 5 months ending at
-/// the selected month.
+/// "Tren 5 bulan" card: an interactive bar chart of the total per month
+/// (expense, income, or net) for the 5 months ending at the selected month.
+/// Each bar's amount only appears in a tooltip after it is tapped.
 class MonthlyTrendCard extends ConsumerWidget {
   const MonthlyTrendCard({super.key});
 
   static const _chartHeight = 170.0;
-  static const _barMaxHeight = 110.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trend = ref.watch(monthlyTrendProvider);
+    final mode = ref.watch(selectedReportModeProvider);
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -33,7 +34,19 @@ class MonthlyTrendCard extends ConsumerWidget {
           Text('Tren 5 bulan', style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: AppSpacing.lg),
           trend.when(
-            data: (months) => _TrendBars(months: months),
+            data: (months) => ReportInteractiveBarChart(
+              height: _chartHeight,
+              data: [
+                for (final month in months)
+                  ReportBarDatum(
+                    axisLabel: DateFormat('MMM', 'id_ID').format(month.month),
+                    value: month.totalCents,
+                    color: mode == ReportMode.net
+                        ? (month.totalCents < 0 ? AppColors.expense : AppColors.income)
+                        : null,
+                  ),
+              ],
+            ),
             loading: () => const SizedBox(
               height: _chartHeight,
               child: Center(child: ReportShimmerBox(width: 220, height: 100)),
@@ -48,36 +61,6 @@ class MonthlyTrendCard extends ConsumerWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TrendBars extends StatelessWidget {
-  const _TrendBars({required this.months});
-
-  final List<MonthlySpending> months;
-
-  @override
-  Widget build(BuildContext context) {
-    final maxTotal = months.fold<int>(0, (m, v) => v.totalCents > m ? v.totalCents : m);
-
-    return SizedBox(
-      height: MonthlyTrendCard._chartHeight,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          for (final month in months)
-            Expanded(
-              child: ReportBarColumn(
-                valueLabel: formatRupiahCompact(month.totalCents),
-                axisLabel: DateFormat('MMM', 'id_ID').format(month.month),
-                heightFraction: maxTotal == 0 ? 0 : month.totalCents / maxTotal,
-                highlighted: month.totalCents > 0,
-                maxBarHeight: MonthlyTrendCard._barMaxHeight,
-              ),
-            ),
         ],
       ),
     );
