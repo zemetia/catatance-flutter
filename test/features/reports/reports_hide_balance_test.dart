@@ -24,6 +24,7 @@ void main() {
       colorValue: 0xFFFF5722,
       totalCents: 350000,
       share: 0.7,
+      count: 3,
     ),
   ];
 

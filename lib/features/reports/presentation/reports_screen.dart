@@ -52,7 +52,7 @@ class ReportsScreen extends ConsumerWidget {
       MenuSectionItem(
         icon: LucideIcons.calendar_days,
         label: 'Kalender Cashflow',
-        description: 'Arus harian + jatuh tempo',
+        description: 'Arus masuk & keluar per hari',
         onTap: () => context.push('/reports/kalender-cashflow'),
       ),
     ];

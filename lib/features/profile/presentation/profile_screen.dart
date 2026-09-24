@@ -21,6 +21,42 @@ class ProfileScreen extends ConsumerWidget {
       ..showSnackBar(SnackBar(content: Text('$label segera hadir')));
   }
 
+  Future<void> _confirmResetAllData(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus semua data?'),
+        content: const Text(
+          'Semua transaksi, dompet, anggaran, target tabungan, utang/piutang, '
+          'cicilan, dan lencana akan dihapus permanen. Nama dan profilmu '
+          'tidak akan terpengaruh. Tindakan ini tidak dapat dibatalkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            child: const Text('Hapus Semua'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    await ref.read(dataManagementRepositoryProvider).resetAllData();
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Semua data berhasil dihapus')));
+  }
+
   Future<void> _confirmLogout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -229,6 +265,16 @@ class ProfileScreen extends ConsumerWidget {
       ),
     ];
 
+    final dangerItems = [
+      MenuSectionItem(
+        icon: LucideIcons.trash,
+        label: 'Hapus Semua Data',
+        description: 'Reset transaksi, dompet, dan data lain — profil tetap aman',
+        iconColor: AppColors.expense,
+        onTap: () => _confirmResetAllData(context, ref),
+      ),
+    ];
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -280,6 +326,12 @@ class ProfileScreen extends ConsumerWidget {
               title: 'Dukungan',
               items: supportItems,
               delay: const Duration(milliseconds: 160),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            MenuSection(
+              title: 'Zona Berbahaya',
+              items: dangerItems,
+              delay: const Duration(milliseconds: 200),
             ),
             const SizedBox(height: AppSpacing.lg),
             SizedBox(

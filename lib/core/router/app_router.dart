@@ -38,6 +38,7 @@ import '../../features/profile/presentation/theme_settings_screen.dart';
 import '../../features/reports/presentation/kalender_cashflow_screen.dart';
 import '../../features/reports/presentation/laporan_bulanan_screen.dart';
 import '../../features/reports/presentation/proyeksi_screen.dart';
+import '../../features/reports/presentation/purchase_simulator_screen.dart';
 import '../../features/reports/presentation/radar_harga_screen.dart';
 import '../../features/reports/presentation/reports_screen.dart';
 import '../../features/savings_goals/presentation/savings_goal_detail_screen.dart';
@@ -337,6 +338,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/reports/proyeksi',
         name: 'reports-proyeksi',
         builder: (_, _) => const ProyeksiScreen(),
+      ),
+      GoRoute(
+        path: '/reports/proyeksi/simulasi',
+        name: 'reports-proyeksi-simulasi',
+        builder: (_, _) => const PurchaseSimulatorScreen(),
       ),
       GoRoute(
         path: '/reports/laporan-bulanan',

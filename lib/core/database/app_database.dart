@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app_meta_storage.dart';
 import 'seed_data.dart';
 import 'tables/accounts_table.dart';
 import 'tables/bank_notification_mappings_table.dart';
@@ -194,10 +195,41 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA foreign_keys = ON;');
       final existing = await (select(accounts)..limit(1)).get();
       if (existing.isEmpty) {
-        await seedInitialData(this);
+        final resetByUser = await const AppMetaStorage().wasDataResetByUser();
+        if (!resetByUser) {
+          await seedInitialData(this);
+        }
       }
     },
   );
+
+  /// Wipes every user-entered record (wallets, transactions, debts,
+  /// budgets, savings goals, installments, split bills, bank-notification
+  /// captures/mappings, earned badges) while leaving `Categories` (shared
+  /// reference data the app needs to keep functioning) untouched. The
+  /// user's name/profile isn't stored in this database at all (see
+  /// `userProfileProvider`), so there's nothing to preserve there.
+  ///
+  /// Also marks the reset in [AppMetaStorage] so `beforeOpen` doesn't
+  /// mistake the resulting empty `accounts` table for a fresh install and
+  /// re-populate it with demo seed data on the next app launch.
+  Future<void> resetAllData() async {
+    await transaction(() async {
+      await delete(capturedBankNotifications).go();
+      await delete(bankNotificationMappings).go();
+      await delete(installmentPayments).go();
+      await delete(installments).go();
+      await delete(debtPayments).go();
+      await delete(debts).go();
+      await delete(splitBills).go();
+      await delete(budgets).go();
+      await delete(savingsGoals).go();
+      await delete(earnedBadges).go();
+      await delete(transactions).go();
+      await delete(accounts).go();
+    });
+    await const AppMetaStorage().markDataResetByUser();
+  }
 }
 
 QueryExecutor _openConnection() {

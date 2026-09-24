@@ -1,4 +1,14 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+
+import '../../../core/database/app_database.dart';
+import '../data/data_management_repository.dart';
+
+final dataManagementRepositoryProvider = Provider<DataManagementRepository>((
+  ref,
+) {
+  return DataManagementRepository(ref.watch(appDatabaseProvider));
+});
 
 /// Editable identity shown on the profile header and the "Akun" screen.
 class UserProfile {
