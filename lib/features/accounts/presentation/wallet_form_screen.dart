@@ -8,10 +8,10 @@ import '../../../core/constants/currencies.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/input_formatters.dart';
 import '../data/account_repository.dart';
 import '../domain/account.dart';
 import 'account_providers.dart';
-import 'widgets/amount_keypad.dart';
 import 'widgets/currency_picker_sheet.dart';
 
 /// "Dompet baru" / "Edit dompet" — create a new wallet/account, or edit an
@@ -46,13 +46,13 @@ class WalletFormScreen extends HookConsumerWidget {
         : null;
 
     final amountDigits = useState('');
+    final amountController = useTextEditingController(text: 'Rp 0');
     final nameController = useTextEditingController();
     final name = useValueListenable(nameController);
     final selectedType = useState(AccountType.bank);
     final selectedCurrency = useState<Currency>(defaultCurrency);
     final selectedColor = useState(AppColors.walletPalette.first);
     final isDefault = useState(false);
-    final amountEntryOpen = useState(false);
     final prefilled = useState(false);
 
     if (existingAccount != null && !prefilled.value) {
@@ -64,6 +64,21 @@ class WalletFormScreen extends HookConsumerWidget {
       isDefault.value = existingAccount.isDefault;
       amountDigits.value = existingAccount.balanceCents.toString();
     }
+
+    // Reformat the nominal field's currency symbol whenever the wallet's
+    // currency changes, keeping the raw digits intact.
+    useEffect(() {
+      final currentNum =
+          int.tryParse(amountDigits.value.isEmpty ? '0' : amountDigits.value) ??
+          0;
+      final formatted =
+          formatCurrencyInput(currentNum, currency: selectedCurrency.value);
+      amountController.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+      return null;
+    }, [selectedCurrency.value.code, prefilled.value]);
 
     final actionState = ref.watch(walletActionProvider);
     final canSubmit =
@@ -111,30 +126,13 @@ class WalletFormScreen extends HookConsumerWidget {
           ),
           children: [
             _SaldoAwalCard(
-              amountCents: amount,
+              controller: amountController,
               currency: selectedCurrency.value,
-              expanded: amountEntryOpen.value,
-              onTap: () => amountEntryOpen.value = !amountEntryOpen.value,
+              onChanged: (val) {
+                final clean = val.replaceAll(RegExp(r'[^\d]'), '');
+                amountDigits.value = clean == '0' ? '' : clean;
+              },
             ),
-            if (amountEntryOpen.value) ...[
-              const SizedBox(height: AppSpacing.md),
-              AmountKeypad(
-                onKey: (key) {
-                  if (key == 'backspace') {
-                    if (amountDigits.value.isNotEmpty) {
-                      amountDigits.value = amountDigits.value.substring(
-                        0,
-                        amountDigits.value.length - 1,
-                      );
-                    }
-                  } else if (key != '.' && amountDigits.value.length < 12) {
-                    amountDigits.value = amountDigits.value == '0'
-                        ? key
-                        : amountDigits.value + key;
-                  }
-                },
-              ),
-            ],
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: nameController,
@@ -245,54 +243,61 @@ class WalletFormScreen extends HookConsumerWidget {
 
 class _SaldoAwalCard extends StatelessWidget {
   const _SaldoAwalCard({
-    required this.amountCents,
+    required this.controller,
     required this.currency,
-    required this.expanded,
-    required this.onTap,
+    required this.onChanged,
   });
 
-  final int amountCents;
+  final TextEditingController controller;
   final Currency currency;
-  final bool expanded;
-  final VoidCallback onTap;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Material(
-      color: scheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      child: InkWell(
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.lg,
+        horizontal: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: AppSpacing.lg,
-            horizontal: AppSpacing.md,
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Saldo awal',
+            style: textTheme.bodyMedium?.copyWith(color: scheme.outline),
           ),
-          child: Column(
-            children: [
-              Text(
-                'Saldo awal',
-                style: textTheme.bodyMedium?.copyWith(color: scheme.outline),
+          const SizedBox(height: AppSpacing.xs),
+          IntrinsicWidth(
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                ThousandsSeparatorInputFormatter(currency: currency),
+              ],
+              textAlign: TextAlign.center,
+              style: textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w800,
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                formatCurrency(amountCents, currency: currency),
-                style: textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Saldo mulai dompet ini (${currency.code})',
-                style: textTheme.bodySmall?.copyWith(color: scheme.outline),
-              ),
-            ],
+              onChanged: onChanged,
+            ),
           ),
-        ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Saldo mulai dompet ini (${currency.code})',
+            style: textTheme.bodySmall?.copyWith(color: scheme.outline),
+          ),
+        ],
       ),
     );
   }

@@ -39,7 +39,18 @@ class PaymentBottomSheet extends HookConsumerWidget {
     final remaining = debt.remainingCents;
 
     final accounts = ref.watch(accountListProvider).value ?? const <Account>[];
-    final selectedAccount = useState<Account?>(null);
+    final userSelectedAccount = useState<Account?>(null);
+    final walletCleared = useState(false);
+    // Resolved wallet: explicit user selection, or the default/first wallet
+    // auto-picked like the transaction & transfer screens — unless the user
+    // deliberately cleared it via "Hapus".
+    final selectedAccount = walletCleared.value
+        ? null
+        : userSelectedAccount.value ??
+              (accounts.isNotEmpty
+                  ? (accounts.where((a) => a.isDefault).firstOrNull ??
+                        accounts.first)
+                  : null);
 
     final amountController = useTextEditingController(
       text: remaining > 0 ? remaining.toString() : '',
@@ -99,7 +110,7 @@ class PaymentBottomSheet extends HookConsumerWidget {
                 note: noteController.text.trim().isEmpty
                     ? null
                     : noteController.text.trim(),
-                accountId: selectedAccount.value?.id,
+                accountId: selectedAccount?.id,
               ),
             );
 
@@ -246,16 +257,6 @@ class PaymentBottomSheet extends HookConsumerWidget {
                 ),
               ),
             ),
-            if (parseAmount() > 0) ...[
-              const SizedBox(height: 4),
-              Text(
-                formatRupiah(parseAmount()),
-                style: textTheme.labelLarge?.copyWith(
-                  color: scheme.outline,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: 8,
@@ -360,10 +361,13 @@ class PaymentBottomSheet extends HookConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (selectedAccount.value != null) ...[
+                if (selectedAccount != null) ...[
                   const SizedBox(width: AppSpacing.xs),
                   TextButton(
-                    onPressed: () => selectedAccount.value = null,
+                    onPressed: () {
+                      userSelectedAccount.value = null;
+                      walletCleared.value = true;
+                    },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
@@ -386,10 +390,11 @@ class PaymentBottomSheet extends HookConsumerWidget {
                   context,
                   title: 'Pilih Dompet',
                   accounts: accounts,
-                  selected: selectedAccount.value,
+                  selected: selectedAccount,
                 );
                 if (picked != null) {
-                  selectedAccount.value = picked;
+                  userSelectedAccount.value = picked;
+                  walletCleared.value = false;
                 }
               },
               borderRadius: BorderRadius.circular(12),
@@ -401,18 +406,18 @@ class PaymentBottomSheet extends HookConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    if (selectedAccount.value != null) ...[
+                    if (selectedAccount != null) ...[
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: selectedAccount.value!.color
+                          color: selectedAccount.color
                               .withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          selectedAccount.value!.type.icon,
+                          selectedAccount.type.icon,
                           size: 16,
-                          color: selectedAccount.value!.color,
+                          color: selectedAccount.color,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -421,7 +426,7 @@ class PaymentBottomSheet extends HookConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              selectedAccount.value!.name,
+                              selectedAccount.name,
                               style: textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -429,7 +434,7 @@ class PaymentBottomSheet extends HookConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              'Saldo: ${selectedAccount.value!.formattedBalanceCompact}',
+                              'Saldo: ${selectedAccount.formattedBalanceCompact}',
                               style: textTheme.bodySmall?.copyWith(
                                 color: scheme.outline,
                               ),

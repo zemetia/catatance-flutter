@@ -36,6 +36,9 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
   }
 
   Future<void> _tryBiometric() async {
+    // Delay briefly so Android FragmentActivity transition completes before prompt
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
     final biometrics = ref.read(biometricAuthServiceProvider);
     final ok = await biometrics.authenticate(
       reason: 'Buka kunci Pencatatan Keuangan',

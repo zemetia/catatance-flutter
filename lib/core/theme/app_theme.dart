@@ -25,6 +25,11 @@ ThemeData buildLightTheme([AppColorTheme colorTheme = AppColorTheme.emerald]) =>
       subThemesData: _subThemes,
       fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      // Soft-tinted surfaces instead of a stark FFFFFF background — every
+      // surface picks up a faint wash of the seed color so cards read as
+      // "off-white", not paper-white.
+      surfaceMode: FlexSurfaceMode.highBackgroundLowScaffold,
+      blendLevel: 9,
     );
 
 ThemeData buildDarkTheme([AppColorTheme colorTheme = AppColorTheme.emerald]) =>
@@ -34,7 +39,9 @@ ThemeData buildDarkTheme([AppColorTheme colorTheme = AppColorTheme.emerald]) =>
       subThemesData: _subThemes,
       fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
       visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      // Never true black — surfaces stay a soft charcoal tinted with the
+      // seed color so cards/sheets read as "near-black", not 000000.
       darkIsTrueBlack: false,
       surfaceMode: FlexSurfaceMode.highBackgroundLowScaffold,
-      blendLevel: 14,
+      blendLevel: 18,
     );

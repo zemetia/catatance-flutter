@@ -26,7 +26,7 @@ class BiometricAuthService {
         biometricOnly: true,
         persistAcrossBackgrounding: true,
       );
-    } on Exception {
+    } catch (_) {
       return false;
     }
   }
