@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_providers.dart';
 import 'core/widgets/app_lock/app_lock_gate.dart';
 import 'features/bank_notifications/presentation/widgets/bank_notification_sync_observer.dart';
+import 'features/profile/presentation/backup_providers.dart';
 import 'features/profile/presentation/home_widgets_providers.dart';
 
 class App extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class _AppState extends ConsumerState<App> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initHomeWidgetNavigation();
+      ref.read(backupScreenProvider.notifier).runAutoBackupIfDue();
     });
   }
 
@@ -48,7 +50,7 @@ class _AppState extends ConsumerState<App> {
     final themeSettings = ref.watch(themeSettingsProvider);
 
     return MaterialApp.router(
-      title: 'Pencatatan Keuangan',
+      title: 'Catatance',
       debugShowCheckedModeBanner: false,
       theme: buildLightTheme(themeSettings.colorTheme),
       darkTheme: buildDarkTheme(themeSettings.colorTheme),

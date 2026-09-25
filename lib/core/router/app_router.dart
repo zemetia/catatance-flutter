@@ -21,6 +21,7 @@ import '../../features/installments/presentation/installment_form_screen.dart';
 import '../../features/installments/presentation/installment_list_screen.dart';
 import '../../features/profile/presentation/about_screen.dart';
 import '../../features/profile/presentation/account_screen.dart';
+import '../../features/profile/presentation/backup_screen.dart';
 import '../../features/profile/presentation/feedback_screen.dart';
 import '../../features/profile/presentation/help_screen.dart';
 import '../../features/profile/presentation/home_widgets_screen.dart';
@@ -245,6 +246,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/settings/theme',
         name: 'settings-theme',
         builder: (_, _) => const ThemeSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile/backup',
+        name: 'profile-backup',
+        builder: (_, _) => const BackupScreen(),
       ),
       GoRoute(
         path: '/profile/account',

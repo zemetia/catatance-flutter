@@ -539,6 +539,11 @@ Future<void> seedInitialData(AppDatabase db) async {
           ),
         );
 
+    // Categories - Expense (Bisnis / Usaha)
+    for (final c in businessExpenseCategoriesV16) {
+      await db.into(db.categories).insert(c.toCompanion());
+    }
+
     // Categories - Income
     final catGaji = await db
         .into(db.categories)
@@ -1413,4 +1418,48 @@ Future<void> expandCategoriesV13(AppDatabase db) async {
   await add('Pinjaman', 'hand-coins', 'income', 0xFFE8590C);
   await add('Adjustment', 'scale', 'income', 0xFF868E96);
   await add('Lainnya', 'receipt', 'income', 0xFF868E96);
+}
+
+/// A seeded category's fixed shape (name/icon/color), reused by both the
+/// fresh-install seed and the v16 upgrade migration so the two lists can't
+/// drift apart.
+class _SeedCategory {
+  const _SeedCategory(this.name, this.icon, this.colorValue);
+
+  final String name;
+  final String icon;
+  final int colorValue;
+
+  CategoriesCompanion toCompanion() => CategoriesCompanion.insert(
+        name: name,
+        icon: icon,
+        type: 'expense',
+        colorValue: colorValue,
+      );
+}
+
+/// Kategori pengeluaran bisnis: a dedicated set of expense categories for
+/// tracking business/usaha costs (stock, staff, rent, marketing, ...)
+/// separately from personal spending categories.
+const businessExpenseCategoriesV16 = <_SeedCategory>[
+  _SeedCategory('Bahan Baku', 'boxes', 0xFFE8590C),
+  _SeedCategory('Stok Barang Dagangan', 'package', 0xFFF76707),
+  _SeedCategory('Sewa Tempat Usaha', 'store', 0xFF862E9C),
+  _SeedCategory('Gaji Karyawan', 'users', 0xFF1C7ED6),
+  _SeedCategory('Marketing & Iklan', 'megaphone', 0xFFE64980),
+  _SeedCategory('Ongkos Kirim Bisnis', 'truck', 0xFF495057),
+  _SeedCategory('Peralatan & Perlengkapan Usaha', 'wrench', 0xFF12B886),
+  _SeedCategory('Perawatan & Perbaikan', 'hammer', 0xFF868E96),
+  _SeedCategory('Listrik & Internet Usaha', 'zap', 0xFFFCC419),
+  _SeedCategory('Aplikasi & Software Bisnis', 'layout-dashboard', 0xFF7048E8),
+  _SeedCategory('Pajak & Perizinan Usaha', 'stamp', 0xFF20C997),
+  _SeedCategory('Administrasi & Legal', 'file-text', 0xFF5F3DC4),
+];
+
+/// Schema v16: adds [businessExpenseCategoriesV16] for existing installs
+/// (fresh installs already get them via [seedInitialData]).
+Future<void> addBusinessExpenseCategoriesV16(AppDatabase db) async {
+  for (final c in businessExpenseCategoriesV16) {
+    await db.into(db.categories).insert(c.toCompanion());
+  }
 }

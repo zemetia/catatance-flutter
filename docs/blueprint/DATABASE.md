@@ -6,7 +6,17 @@ Local-first: all financial data lives on-device in SQLite via Drift. No backend 
 
 - `core/database/app_database.dart` — `@DriftDatabase(tables: [...])` class, single instance via `appDatabaseProvider`.
 - `core/database/tables/` — one file per table, using Drift's Dart-defined tables (`Table` subclass), not raw SQL, so types + null-safety are enforced.
-- Connection: `sqlite3_flutter_libs` for native SQLite bundling, file stored via `path_provider` (`getApplicationDocumentsDirectory()`).
+- Connection: `drift_flutter`'s `driftDatabase(name: ...)`, file stored via `path_provider` (`getApplicationDocumentsDirectory()`).
+
+### Crash/interruption durability
+
+`_openConnection()` passes `native: DriftNativeOptions(setup: (db) { ... })` to run these PRAGMAs on every connection before Drift uses it:
+
+- `PRAGMA journal_mode = WAL` — writes go to an append-only `.wal` file instead of being applied in place, so an app crash or an OS/app update killed mid-write can never leave the main `.sqlite` file half-written; SQLite replays or discards the incomplete WAL frames on next open.
+- `PRAGMA synchronous = NORMAL` — the mode SQLite recommends pairing with WAL: still fsyncs at every checkpoint (durable against app/OS crash), only trades away the very last uncommitted transaction against actual power loss, in exchange for much faster writes than `FULL`.
+- `PRAGMA busy_timeout = 5000` — avoids spurious "database is locked" errors if two connections briefly overlap.
+
+Requires `sqlite3` as a **direct** `pubspec.yaml` dependency (not just transitive via `drift`/`drift_flutter`) for the `CommonDatabase` setup-callback type. Never change the `name` passed to `driftDatabase()` or the resolved directory — either would make the app open a fresh, empty database and orphan every existing user's data.
 
 ## Core schema (starting point)
 

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqlite3/common.dart';
 
 import 'app_meta_storage.dart';
 import 'seed_data.dart';
@@ -40,8 +41,13 @@ part 'app_database.g.dart';
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
+  /// On-disk file name (without extension), shared with `BackupService` so
+  /// the backup/restore flow always points at the exact same `.sqlite` file
+  /// `_openConnection()` opens — never duplicate this string elsewhere.
+  static const fileBaseName = 'pencatatan_keuangan';
+
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -190,6 +196,13 @@ class AppDatabase extends _$AppDatabase {
           ),
         );
       }
+      if (from < 16) {
+        // Kategori pengeluaran bisnis: a dedicated set of expense categories
+        // for users tracking business/usaha costs alongside personal ones
+        // (still plain 'expense' categories — Categories has no
+        // personal/business flag, they're just distinguished by name/icon).
+        await addBusinessExpenseCategoriesV16(this);
+      }
     },
     beforeOpen: (OpeningDetails details) async {
       await customStatement('PRAGMA foreign_keys = ON;');
@@ -233,7 +246,31 @@ class AppDatabase extends _$AppDatabase {
 }
 
 QueryExecutor _openConnection() {
-  return driftDatabase(name: 'pencatatan_keuangan');
+  return driftDatabase(
+    // Keep the on-disk file name unchanged (`pencatatan_keuangan.sqlite`) even
+    // though the app is now branded "Catatance" — renaming it would make the
+    // app look for a fresh, empty database and orphan every existing user's
+    // data.
+    name: AppDatabase.fileBaseName,
+    native: DriftNativeOptions(
+      setup: (CommonDatabase db) {
+        // WAL is far more crash/interruption-resilient than SQLite's default
+        // rollback journal: writes go to an append-only .wal file rather than
+        // being applied in place, so a crash or an OS/app update killed mid-
+        // write can never leave the main database file half-written or
+        // corrupted — SQLite just replays or discards the incomplete WAL
+        // frames on next open. `synchronous=NORMAL` is the mode SQLite itself
+        // recommends pairing with WAL: it still fsyncs at every checkpoint, so
+        // a committed transaction survives an app crash or OS-level restart,
+        // it only trades away durability against actual power loss for
+        // meaningfully faster writes. `busy_timeout` avoids spurious "database
+        // is locked" failures if two connections briefly overlap.
+        db.execute('PRAGMA journal_mode = WAL;');
+        db.execute('PRAGMA synchronous = NORMAL;');
+        db.execute('PRAGMA busy_timeout = 5000;');
+      },
+    ),
+  );
 }
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {

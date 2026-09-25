@@ -62,7 +62,7 @@ final homeWidgetSyncProvider = Provider<void>((ref) {
 
   final subtitle = settings.showActiveWalletsCount && accounts.isNotEmpty
       ? '${accounts.length} Dompet Aktif • Real-time'
-      : 'Pencatatan Keuangan • Real-time';
+      : 'Catatance • Real-time';
 
   service.updateWidgetData(
     balanceCents: totalBalance,

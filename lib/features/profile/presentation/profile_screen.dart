@@ -126,7 +126,7 @@ class ProfileScreen extends ConsumerWidget {
         icon: LucideIcons.database,
         label: 'Backup & Data',
         description: 'Cadangkan dan pulihkan datamu',
-        onTap: () => _comingSoon(context, 'Backup & Data'),
+        onTap: () => context.push('/profile/backup'),
       ),
     ];
 

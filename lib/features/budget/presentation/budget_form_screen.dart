@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/input_formatters.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../categories/domain/category_item.dart';
 import '../../categories/presentation/category_providers.dart';
@@ -45,7 +46,7 @@ class BudgetFormScreen extends HookConsumerWidget {
 
     if (isEdit && !isInitialized.value && existingAsync?.value != null) {
       final existing = existingAsync!.value!;
-      amountController.text = existing.limitCents.toString();
+      amountController.text = formatCurrencyInput(existing.limitCents);
       periodType.value = existing.periodType;
       if (existing.customStartDate != null) customStart.value = existing.customStartDate!;
       if (existing.customEndDate != null) customEnd.value = existing.customEndDate!;
@@ -72,6 +73,14 @@ class BudgetFormScreen extends HookConsumerWidget {
     int parseAmount() {
       final clean = amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
       return int.tryParse(clean) ?? 0;
+    }
+
+    void updateAmountValue(int nextAmount) {
+      final formatted = formatCurrencyInput(nextAmount < 0 ? 0 : nextAmount);
+      amountController.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
     }
 
     final excludedCategoryIds = existingBudgets
@@ -103,6 +112,12 @@ class BudgetFormScreen extends HookConsumerWidget {
       if (amount <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Masukkan batas anggaran yang valid')),
+        );
+        return;
+      }
+      if (excludedCategoryIds.contains(category.id)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kategori ${category.name} sudah punya anggaran')),
         );
         return;
       }
@@ -152,6 +167,49 @@ class BudgetFormScreen extends HookConsumerWidget {
       }
     }
 
+    Future<void> deleteExisting() async {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Hapus Anggaran?'),
+          content: Text(
+            'Yakin ingin menghapus anggaran untuk "${selectedCategory.value?.name ?? existingAsync?.value?.categoryName ?? ''}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+              child: const Text('Hapus'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+
+      isSaving.value = true;
+      try {
+        await ref.read(budgetActionProvider.notifier).deleteBudget(budgetId!);
+        if (context.mounted) {
+          context.pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Anggaran berhasil dihapus')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal menghapus: $e')),
+          );
+        }
+      } finally {
+        isSaving.value = false;
+      }
+    }
+
     final accentColor = selectedCategory.value?.color ?? scheme.primary;
 
     return Scaffold(
@@ -174,7 +232,14 @@ class BudgetFormScreen extends HookConsumerWidget {
                       style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                     ),
                   ),
-                  const SizedBox(width: 40),
+                  if (isEdit)
+                    CircleIconButton(
+                      icon: LucideIcons.trash,
+                      backgroundColor: scheme.surfaceContainerHigh,
+                      onTap: isSaving.value ? null : deleteExisting,
+                    )
+                  else
+                    const SizedBox(width: 40),
                 ],
               ),
             ),
@@ -262,52 +327,35 @@ class BudgetFormScreen extends HookConsumerWidget {
                         TextField(
                           controller: amountController,
                           keyboardType: TextInputType.number,
+                          inputFormatters: [ThousandsSeparatorInputFormatter()],
                           style: textTheme.headlineMedium?.copyWith(
                             color: accentColor,
                             fontWeight: FontWeight.w800,
                           ),
-                          decoration: InputDecoration(
-                            prefixText: 'Rp ',
-                            prefixStyle: textTheme.headlineMedium?.copyWith(
-                              color: accentColor,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            hintText: '0',
+                          decoration: const InputDecoration(
                             border: InputBorder.none,
                           ),
                         ),
-                        if (parseAmount() > 0) ...[
-                          Text(
-                            formatRupiah(parseAmount()),
-                            style: textTheme.labelLarge?.copyWith(
-                              color: scheme.outline,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                        ],
+                        const SizedBox(height: AppSpacing.xs),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
                             _AmountChip(
                               label: '+500rb',
-                              onTap: () => amountController.text =
-                                  (parseAmount() + 500000).toString(),
+                              onTap: () => updateAmountValue(parseAmount() + 500000),
                             ),
                             _AmountChip(
                               label: '+1jt',
-                              onTap: () => amountController.text =
-                                  (parseAmount() + 1000000).toString(),
+                              onTap: () => updateAmountValue(parseAmount() + 1000000),
                             ),
                             _AmountChip(
                               label: '+5jt',
-                              onTap: () => amountController.text =
-                                  (parseAmount() + 5000000).toString(),
+                              onTap: () => updateAmountValue(parseAmount() + 5000000),
                             ),
                             _AmountChip(
                               label: 'Reset',
-                              onTap: () => amountController.clear(),
+                              onTap: () => updateAmountValue(0),
                             ),
                           ],
                         ),

@@ -224,7 +224,7 @@ class _LiveTotalBalanceWidgetCard extends ConsumerWidget {
     final balanceDisplay = isHidden ? 'Rp ••••••••' : formatRupiah(totalBalance);
     final subtitle = settings.showActiveWalletsCount && accounts.isNotEmpty
         ? '${accounts.length} Dompet Aktif • Sinkron Otomatis'
-        : 'Pencatatan Keuangan • Real-time';
+        : 'Catatance • Real-time';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1067,7 +1067,7 @@ class _WidgetGuideSheet extends StatelessWidget {
                 'Pergi ke layar utama (homescreen) ponsel Anda.',
                 'Tekan dan tahan area kosong di layar hingga muncul menu.',
                 'Ketuk menu "Widget".',
-                'Cari aplikasi "Pencatatan Keuangan".',
+                'Cari aplikasi "Catatance".',
                 'Pilih widget "Total Saldo & Transaksi" lalu seret ke layar utama.',
               ],
             ),
@@ -1081,7 +1081,7 @@ class _WidgetGuideSheet extends StatelessWidget {
               steps: const [
                 'Sentuh dan tahan area kosong di layar hingga ikon bergoyang.',
                 'Ketuk tombol "+" di pojok kiri atas layar.',
-                'Cari "Pencatatan Keuangan" di daftar widget.',
+                'Cari "Catatance" di daftar widget.',
                 'Pilih ukuran widget yang Anda sukai.',
                 'Ketuk "Tambah Widget" (Add Widget).',
               ],

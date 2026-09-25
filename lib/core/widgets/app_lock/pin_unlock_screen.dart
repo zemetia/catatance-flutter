@@ -41,7 +41,7 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
     if (!mounted) return;
     final biometrics = ref.read(biometricAuthServiceProvider);
     final ok = await biometrics.authenticate(
-      reason: 'Buka kunci Pencatatan Keuangan',
+      reason: 'Buka kunci Catatance',
     );
     if (ok && mounted) {
       ref.read(appLockProvider.notifier).unlock();

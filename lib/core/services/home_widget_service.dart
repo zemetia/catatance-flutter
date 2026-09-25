@@ -32,7 +32,7 @@ class HomeWidgetService {
     try {
       final success = await _channel.invokeMethod<bool>('updateWidgetData', {
         'balance_text': formattedBalance,
-        'subtitle_text': subtitle ?? 'Pencatatan Keuangan • Real-time',
+        'subtitle_text': subtitle ?? 'Catatance • Real-time',
       });
       return success ?? false;
     } on MissingPluginException {

@@ -84,6 +84,16 @@ class CategoryItem {
         'banknote' => LucideIcons.banknote,
         'arrow-up-right' => LucideIcons.arrow_up_right,
         'arrow-down-left' => LucideIcons.arrow_down_left,
+        'store' => LucideIcons.store,
+        'users' => LucideIcons.users,
+        'megaphone' => LucideIcons.megaphone,
+        'truck' => LucideIcons.truck,
+        'wrench' => LucideIcons.wrench,
+        'hammer' => LucideIcons.hammer,
+        'file-text' => LucideIcons.file_text,
+        'layout-dashboard' => LucideIcons.layout_dashboard,
+        'boxes' => LucideIcons.boxes,
+        'stamp' => LucideIcons.stamp,
         _ => LucideIcons.receipt,
       };
 }

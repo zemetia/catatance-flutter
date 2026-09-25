@@ -177,8 +177,7 @@ class BudgetActionNotifier extends AsyncNotifier<void> {
   }
 }
 
-final budgetActionProvider =
-    AsyncNotifierProvider.autoDispose<BudgetActionNotifier, void>(
+final budgetActionProvider = AsyncNotifierProvider<BudgetActionNotifier, void>(
   BudgetActionNotifier.new,
 );
 
