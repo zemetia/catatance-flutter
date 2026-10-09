@@ -8,6 +8,8 @@ import '../../../core/widgets/widgets.dart';
 import '../../accounts/presentation/account_providers.dart';
 import '../../savings_goals/presentation/savings_goal_providers.dart';
 import '../../savings_goals/presentation/widgets/savings_goal_item_card.dart';
+import '../../wishlist/presentation/widgets/wishlist_item_card.dart';
+import '../../wishlist/presentation/wishlist_providers.dart';
 import 'budget_providers.dart';
 import 'widgets/budget_progress_card.dart';
 import 'widgets/budget_section_header.dart';
@@ -23,13 +25,16 @@ class BudgetScreen extends ConsumerWidget {
 
     final budgets = ref.watch(liveBudgetListProvider);
     final goals = ref.watch(savingsGoalListProvider).value ?? const [];
+    final wishlists = ref.watch(wishlistListProvider).value ?? const [];
+    final activeWishlists =
+        wishlists.where((w) => w.isCoolingOff || w.isReady).take(2).toList();
     final periodLabel = ref.watch(currentBudgetPeriodLabelProvider);
     final accounts = ref.watch(accountListProvider).value ?? const [];
     final totalBalance = ref.watch(totalBalanceProvider);
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
+        child: SmoothListView(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
             AppSpacing.md,
@@ -112,6 +117,29 @@ class BudgetScreen extends ConsumerWidget {
                   goal: goals[i],
                   delay: Duration(milliseconds: 40 * i),
                   onTap: () => context.push('/savings-goals/${goals[i].id}'),
+                ),
+              ],
+            const SizedBox(height: AppSpacing.lg),
+            BudgetSectionHeader(
+              title: 'Wishlist Anti-Impulsif',
+              onAdd: () => context.push('/wishlist/new'),
+              onSeeAll: () => context.push('/wishlist'),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            if (activeWishlists.isEmpty)
+              const EmptyStateCard(
+                icon: LucideIcons.hourglass,
+                title: 'Belum ada wishlist aktif',
+                description:
+                    'Tahan belanja impulsif selama 30 hari. Tambahkan barang impianmu ke sini.',
+              )
+            else
+              for (var i = 0; i < activeWishlists.length; i++) ...[
+                if (i > 0) const SizedBox(height: AppSpacing.md),
+                WishlistItemCard(
+                  item: activeWishlists[i],
+                  delay: Duration(milliseconds: 40 * i),
+                  onTap: () => context.push('/wishlist/${activeWishlists[i].id}'),
                 ),
               ],
             const SizedBox(height: AppSpacing.lg),

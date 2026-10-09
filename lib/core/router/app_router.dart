@@ -49,6 +49,9 @@ import '../../features/split_bills/presentation/split_bill_form_screen.dart';
 import '../../features/transactions/presentation/add_transaction_screen.dart';
 import '../../features/transactions/presentation/batch_transaction_screen.dart';
 import '../../features/transactions/presentation/transaction_list_screen.dart';
+import '../../features/wishlist/presentation/wishlist_detail_screen.dart';
+import '../../features/wishlist/presentation/wishlist_form_screen.dart';
+import '../../features/wishlist/presentation/wishlist_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -188,6 +191,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final id = int.parse(state.pathParameters['id']!);
           return SavingsGoalFormScreen(goalId: id);
+        },
+      ),
+      GoRoute(
+        path: '/wishlist',
+        name: 'wishlist',
+        builder: (_, _) => const WishlistScreen(),
+      ),
+      GoRoute(
+        path: '/wishlist/new',
+        name: 'wishlist-new',
+        builder: (_, state) {
+          final query = state.uri.queryParameters;
+          return WishlistFormScreen(
+            initialName: query['name'],
+            initialPriceCents: int.tryParse(query['price'] ?? ''),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/wishlist/:id',
+        name: 'wishlist-detail',
+        builder: (_, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return WishlistDetailScreen(wishlistId: id);
+        },
+      ),
+      GoRoute(
+        path: '/wishlist/:id/edit',
+        name: 'wishlist-edit',
+        builder: (_, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return WishlistFormScreen(wishlistId: id);
         },
       ),
       GoRoute(

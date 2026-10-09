@@ -15,6 +15,7 @@ class StatCard extends StatelessWidget {
     this.color,
     this.delay = Duration.zero,
     this.compact = false,
+    this.enableAnimation = true,
     super.key,
   });
 
@@ -23,10 +24,8 @@ class StatCard extends StatelessWidget {
   final IconData icon;
   final Color? color;
   final Duration delay;
-
-  /// Uses abbreviated formatting (e.g. `Rp22,8jt`) instead of the full
-  /// `Rp22.800.000` for tight layouts.
   final bool compact;
+  final bool enableAnimation;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +34,7 @@ class StatCard extends StatelessWidget {
     final accent = color ?? scheme.primary;
 
     return AppCard(
+      enableAnimation: enableAnimation,
       delay: delay,
       color: accent.withValues(alpha: 0.08),
       backgroundLayers: [

@@ -17,6 +17,8 @@ class TransactionTile extends StatelessWidget {
   final TransactionItem item;
   final VoidCallback? onTap;
 
+  static final _tileDateFormatter = DateFormat('d MMM • HH:mm', 'id_ID');
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -27,7 +29,7 @@ class TransactionTile extends StatelessWidget {
     final amountColor = item.isTransfer
         ? scheme.outline
         : (isIncome ? AppColors.income : scheme.onSurface);
-    final formattedDate = DateFormat('d MMM • HH:mm', 'id_ID').format(item.date);
+    final formattedDate = _tileDateFormatter.format(item.date);
 
     return InkWell(
       onTap: onTap,

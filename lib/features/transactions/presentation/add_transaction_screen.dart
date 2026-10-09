@@ -3,7 +3,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/constants/currencies.dart';
 import '../../../core/theme/app_colors.dart';
@@ -90,9 +89,19 @@ class AddTransactionScreen extends HookConsumerWidget {
       text: formatCurrencyInput(0, currency: currentCurrency),
     );
 
-    // Filter categories based on expense / income
+    // Filter categories based on expense / income and auto-sort by usageCount DESC
     final currentCategories = useMemoized(
-      () => allCategories.where((c) => isExpense.value ? !c.isIncome : c.isIncome).toList(),
+      () {
+        final list = allCategories
+            .where((c) => isExpense.value ? !c.isIncome : c.isIncome)
+            .toList();
+        list.sort((a, b) {
+          final cmp = b.usageCount.compareTo(a.usageCount);
+          if (cmp != 0) return cmp;
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+        return list;
+      },
       [allCategories, isExpense.value],
     );
 
@@ -447,10 +456,10 @@ class AddTransactionScreen extends HookConsumerWidget {
         selectedDate.value.month == now.month &&
         selectedDate.value.day == now.day - 1;
     final dateLabel = isToday
-        ? 'Hari ini, ${DateFormat('d MMM', 'id_ID').format(selectedDate.value)}'
+        ? 'Hari ini, ${formatDateShort(selectedDate.value)}'
         : isYesterday
-            ? 'Kemarin, ${DateFormat('d MMM', 'id_ID').format(selectedDate.value)}'
-            : DateFormat('d MMM yyyy', 'id_ID').format(selectedDate.value);
+            ? 'Kemarin, ${formatDateShort(selectedDate.value)}'
+            : formatDateMedium(selectedDate.value);
 
     return Scaffold(
       appBar: AppBar(
@@ -841,6 +850,30 @@ class AddTransactionScreen extends HookConsumerWidget {
                                     ],
                                   ),
                                 ),
+                                if (selectedCategory.value != null &&
+                                    selectedCategory.value!.usageCount > 0)
+                                  Container(
+                                    margin: const EdgeInsets.only(right: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: (selectedCategory.value?.color ??
+                                              scheme.primary)
+                                          .withValues(alpha: 0.16),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '${selectedCategory.value!.usageCount}x',
+                                      style: textTheme.labelSmall?.copyWith(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: selectedCategory.value?.color ??
+                                            scheme.primary,
+                                      ),
+                                    ),
+                                  ),
                                 Icon(
                                   LucideIcons.chevron_right,
                                   size: 18,
@@ -864,7 +897,33 @@ class AddTransactionScreen extends HookConsumerWidget {
                           for (final cat in currentCategories.take(5)) ...[
                             ChoiceChip(
                               avatar: Icon(cat.iconData, size: 14, color: cat.color),
-                              label: Text(cat.name),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(cat.name),
+                                  if (cat.usageCount > 0) ...[
+                                    const SizedBox(width: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: cat.color.withValues(alpha: 0.18),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '${cat.usageCount}x',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: cat.color,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
                               selected: selectedCategory.value?.id == cat.id,
                               onSelected: (selected) {
                                 if (selected) selectedCategory.value = cat;

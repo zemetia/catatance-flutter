@@ -2,13 +2,37 @@ import 'package:intl/intl.dart';
 
 import '../constants/currencies.dart';
 
+final _rupiahFormatter = NumberFormat.currency(
+  locale: 'id_ID',
+  symbol: 'Rp ',
+  decimalDigits: 0,
+);
+
+final _compactTrimmedFormatter = NumberFormat('#,##0.#', 'id_ID');
+
+final _dateFormatter = DateFormat('d MMMM y', 'id_ID');
+
+final _dateShortFormatter = DateFormat('d MMM', 'id_ID');
+
+final _dateMediumFormatter = DateFormat('d MMM yyyy', 'id_ID');
+
+final _currencyFormatters = <String, NumberFormat>{};
+final _currencyInputFormatters = <String, NumberFormat>{};
+final _groupedNumberFormatter = NumberFormat('#,###', 'id_ID');
+
+/// Formats integer or numeric values with thousands separator (e.g. 50000 -> 50.000).
+String formatNumberGrouped(num value) => _groupedNumberFormatter.format(value);
+
 /// Formats any monetary amount according to the given [Currency] (defaults to IDR).
 String formatCurrency(int amount, {Currency currency = defaultCurrency}) {
   if (currency.code == 'IDR') return formatRupiah(amount);
 
-  final formatter = NumberFormat.currency(
-    symbol: '${currency.symbol} ',
-    decimalDigits: currency.decimalDigits,
+  final formatter = _currencyFormatters.putIfAbsent(
+    currency.code,
+    () => NumberFormat.currency(
+      symbol: '${currency.symbol} ',
+      decimalDigits: currency.decimalDigits,
+    ),
   );
   return formatter.format(amount);
 }
@@ -20,10 +44,13 @@ String formatCurrency(int amount, {Currency currency = defaultCurrency}) {
 String formatCurrencyInput(int amount, {Currency currency = defaultCurrency}) {
   if (currency.code == 'IDR') return formatRupiah(amount);
 
-  final formatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: '${currency.symbol} ',
-    decimalDigits: 0,
+  final formatter = _currencyInputFormatters.putIfAbsent(
+    currency.code,
+    () => NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: '${currency.symbol} ',
+      decimalDigits: 0,
+    ),
   );
   return formatter.format(amount);
 }
@@ -53,12 +80,7 @@ String formatCurrencyCompact(int amount, {Currency currency = defaultCurrency}) 
 /// Format only at the presentation edge — never do arithmetic on the
 /// formatted string this returns.
 String formatRupiah(int amount) {
-  final formatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  );
-  return formatter.format(amount);
+  return _rupiahFormatter.format(amount);
 }
 
 /// Compact Rupiah formatting for tight spaces (chart labels, stat tiles):
@@ -79,14 +101,18 @@ String formatRupiahCompact(int amount) {
   return formatRupiah(amount);
 }
 
-String _trimmed(double value) => NumberFormat('#,##0.#', 'id_ID').format(value);
+String _trimmed(double value) => _compactTrimmedFormatter.format(value);
 
 String formatDate(DateTime date) {
-  return DateFormat('d MMMM y', 'id_ID').format(date);
+  return _dateFormatter.format(date);
 }
 
 String formatDateShort(DateTime date) {
-  return DateFormat('d MMM', 'id_ID').format(date);
+  return _dateShortFormatter.format(date);
+}
+
+String formatDateMedium(DateTime date) {
+  return _dateMediumFormatter.format(date);
 }
 
 /// Time-of-day greeting in Indonesian, e.g. for a dashboard header.

@@ -18,6 +18,8 @@ import 'widgets/laporan_summary_card.dart';
 class LaporanBulananScreen extends ConsumerWidget {
   const LaporanBulananScreen({super.key});
 
+  static final _monthFormatter = DateFormat('MMMM yyyy', 'id_ID');
+
   void _comingSoon(BuildContext context, String label) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -82,7 +84,7 @@ class LaporanBulananScreen extends ConsumerWidget {
                       SizedBox(
                         width: 180,
                         child: Text(
-                          DateFormat('MMMM yyyy', 'id_ID').format(month),
+                          _monthFormatter.format(month),
                           textAlign: TextAlign.center,
                           style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                         ),

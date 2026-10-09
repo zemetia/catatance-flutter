@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
@@ -327,8 +326,7 @@ class QuickDepositSheet extends HookConsumerWidget {
             onChanged: (val) {
               final digits = val.replaceAll(RegExp(r'[^\d]'), '');
               if (digits.isNotEmpty) {
-                final formatted =
-                    NumberFormat('#,###', 'id_ID').format(int.parse(digits));
+                final formatted = formatNumberGrouped(int.parse(digits));
                 if (formatted != val) {
                   amountController.value = TextEditingValue(
                     text: formatted,
@@ -352,8 +350,7 @@ class QuickDepositSheet extends HookConsumerWidget {
                   onTap: () {
                     final current = parseAmount();
                     final updated = current + 50000;
-                    amountController.text =
-                        NumberFormat('#,###', 'id_ID').format(updated);
+                    amountController.text = formatNumberGrouped(updated);
                   },
                 ),
                 const SizedBox(width: 6),
@@ -362,8 +359,7 @@ class QuickDepositSheet extends HookConsumerWidget {
                   onTap: () {
                     final current = parseAmount();
                     final updated = current + 100000;
-                    amountController.text =
-                        NumberFormat('#,###', 'id_ID').format(updated);
+                    amountController.text = formatNumberGrouped(updated);
                   },
                 ),
                 const SizedBox(width: 6),
@@ -372,8 +368,7 @@ class QuickDepositSheet extends HookConsumerWidget {
                   onTap: () {
                     final current = parseAmount();
                     final updated = current + 500000;
-                    amountController.text =
-                        NumberFormat('#,###', 'id_ID').format(updated);
+                    amountController.text = formatNumberGrouped(updated);
                   },
                 ),
                 const SizedBox(width: 6),
@@ -382,8 +377,7 @@ class QuickDepositSheet extends HookConsumerWidget {
                   onTap: () {
                     final current = parseAmount();
                     final updated = current + 1000000;
-                    amountController.text =
-                        NumberFormat('#,###', 'id_ID').format(updated);
+                    amountController.text = formatNumberGrouped(updated);
                   },
                 ),
                 if (currentGoal != null && !currentGoal.isAchieved) ...[
@@ -392,8 +386,8 @@ class QuickDepositSheet extends HookConsumerWidget {
                     label: 'Lunasi (${formatRupiahCompact(currentGoal.remainingCents)})',
                     isHighlight: true,
                     onTap: () {
-                      amountController.text = NumberFormat('#,###', 'id_ID')
-                          .format(currentGoal.remainingCents);
+                      amountController.text =
+                          formatNumberGrouped(currentGoal.remainingCents);
                     },
                   ),
                 ],

@@ -5,6 +5,7 @@ import 'core/router/app_router.dart';
 import 'core/services/home_widget_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_providers.dart';
+import 'core/widgets/smooth_scroll/smooth_scroll_behavior.dart';
 import 'core/widgets/app_lock/app_lock_gate.dart';
 import 'features/bank_notifications/presentation/widgets/bank_notification_sync_observer.dart';
 import 'features/profile/presentation/backup_providers.dart';
@@ -24,6 +25,7 @@ class _AppState extends ConsumerState<App> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initHomeWidgetNavigation();
       ref.read(backupScreenProvider.notifier).runAutoBackupIfDue();
+      ref.read(homeWidgetSyncProvider);
     });
   }
 
@@ -43,8 +45,9 @@ class _AppState extends ConsumerState<App> {
 
   @override
   Widget build(BuildContext context) {
-    // Keep homescreen widget synced with latest balance & settings
-    ref.watch(homeWidgetSyncProvider);
+    // Keep homescreen widget synced with latest balance & settings without
+    // triggering a full MaterialApp.router rebuild on every balance update.
+    ref.listen(homeWidgetSyncProvider, (_, _) {});
 
     final router = ref.watch(appRouterProvider);
     final themeSettings = ref.watch(themeSettingsProvider);
@@ -52,6 +55,7 @@ class _AppState extends ConsumerState<App> {
     return MaterialApp.router(
       title: 'Catatance',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const SmoothScrollBehavior(),
       theme: buildLightTheme(themeSettings.colorTheme),
       darkTheme: buildDarkTheme(themeSettings.colorTheme),
       themeMode: themeSettings.themeMode,

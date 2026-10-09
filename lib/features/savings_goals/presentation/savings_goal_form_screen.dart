@@ -63,15 +63,15 @@ class SavingsGoalFormScreen extends HookConsumerWidget {
       if (existingGoal != null && !isInitialized.value) {
         nameController.text = existingGoal.name;
         targetAmountController.text =
-            NumberFormat('#,###', 'id_ID').format(existingGoal.targetAmountCents);
+            formatNumberGrouped(existingGoal.targetAmountCents);
         selectedIconKey.value = existingGoal.iconKey;
         selectedGradientIndex.value = existingGoal.gradientIndex;
         targetDate.value = existingGoal.targetDate;
         noDeadline.value = existingGoal.targetDate == null;
         autoSaveEnabled.value = existingGoal.autoSaveEnabled;
         if (existingGoal.autoSaveAmountCents > 0) {
-          autoSaveAmountController.text = NumberFormat('#,###', 'id_ID')
-              .format(existingGoal.autoSaveAmountCents);
+          autoSaveAmountController.text =
+              formatNumberGrouped(existingGoal.autoSaveAmountCents);
         }
         autoSaveFrequency.value = existingGoal.autoSaveFrequency;
         selectedAccountId.value = existingGoal.sourceAccountId;
@@ -85,7 +85,7 @@ class SavingsGoalFormScreen extends HookConsumerWidget {
         }
         if (initialTargetAmountCents != null && initialTargetAmountCents! > 0) {
           targetAmountController.text =
-              NumberFormat('#,###', 'id_ID').format(initialTargetAmountCents);
+              formatNumberGrouped(initialTargetAmountCents!);
         }
         if (initialTargetDate != null) {
           targetDate.value = initialTargetDate;
@@ -712,8 +712,7 @@ class SavingsGoalFormScreen extends HookConsumerWidget {
                                       ? (targetAmount / 10).round()
                                       : 500000;
                                   autoSaveAmountController.text =
-                                      NumberFormat('#,###', 'id_ID')
-                                          .format(suggested);
+                                      formatNumberGrouped(suggested);
                                 }
                               },
                             ),
@@ -997,7 +996,7 @@ class SavingsGoalFormScreen extends HookConsumerWidget {
   ) {
     final current = _parseAmount(controller.text);
     final next = current + addAmount;
-    controller.text = NumberFormat('#,###', 'id_ID').format(next);
+    controller.text = formatNumberGrouped(next);
   }
 }
 

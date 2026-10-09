@@ -28,12 +28,12 @@ const knownBankApps = [
   // Bank besar
   KnownBankApp(packageName: 'com.bca', label: 'BCA mobile', section: 'Bank Besar'),
   KnownBankApp(
-    packageName: 'com.bca.mybca.omni.android',
+    packageName: 'com.bca.mybca',
     label: 'myBCA',
     section: 'Bank Besar',
   ),
   KnownBankApp(
-    packageName: 'com.bcadigital.blu',
+    packageName: 'id.co.bcadigital.blu',
     label: 'blu by BCA Digital',
     section: 'Bank Besar',
   ),
@@ -164,3 +164,15 @@ const knownBankApps = [
   KnownBankApp(packageName: 'com.isaku.app', label: 'i.saku (Indomaret)', section: 'E-Wallet'),
   KnownBankApp(packageName: 'com.ada.astrapay', label: 'AstraPay', section: 'E-Wallet'),
 ];
+
+/// Known legacy or variant package names mapped to their canonical IDs.
+const bankPackageAliases = <String, String>{
+  'com.bcadigital.blu': 'id.co.bcadigital.blu',
+  'com.bca.mybca.omni.android': 'com.bca.mybca',
+};
+
+/// Resolves any known legacy/alias package name to its canonical Play Store ID.
+String canonicalBankPackage(String packageName) {
+  return bankPackageAliases[packageName] ?? packageName;
+}
+

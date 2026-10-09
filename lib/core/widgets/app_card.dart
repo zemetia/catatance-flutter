@@ -16,6 +16,7 @@ class AppCard extends StatelessWidget {
     this.border,
     this.backgroundLayers = const [],
     this.delay = Duration.zero,
+    this.enableAnimation = true,
     super.key,
   });
 
@@ -26,12 +27,13 @@ class AppCard extends StatelessWidget {
   final BoxBorder? border;
   final List<Widget> backgroundLayers;
   final Duration delay;
+  final bool enableAnimation;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return ClipRRect(
+    final content = ClipRRect(
       borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       child: Container(
         decoration: BoxDecoration(border: border),
@@ -48,6 +50,17 @@ class AppCard extends StatelessWidget {
           ),
         ),
       ),
-    ).animate(delay: delay).fadeIn(duration: 250.ms).slideY(begin: 0.06, end: 0);
+    );
+
+    if (!enableAnimation) {
+      return RepaintBoundary(child: content);
+    }
+
+    return RepaintBoundary(
+      child: content
+          .animate(delay: delay)
+          .fadeIn(duration: 250.ms)
+          .slideY(begin: 0.06, end: 0),
+    );
   }
 }

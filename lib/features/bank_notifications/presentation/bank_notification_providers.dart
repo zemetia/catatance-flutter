@@ -131,7 +131,14 @@ class BankNotificationSyncNotifier extends AsyncNotifier<void> {
 
   Future<void> sync() async {
     final repo = ref.read(bankNotificationRepositoryProvider);
-    state = await AsyncValue.guard(() => repo.syncFromBridge());
+    final bridge = ref.read(bankNotificationBridgeProvider);
+    state = await AsyncValue.guard(() async {
+      final watched = await repo.watchedPackageNames();
+      if (watched.isNotEmpty) {
+        await bridge.updateWatchedPackages(watched);
+      }
+      await repo.syncFromBridge();
+    });
   }
 }
 

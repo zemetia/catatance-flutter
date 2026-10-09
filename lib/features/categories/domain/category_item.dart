@@ -8,6 +8,7 @@ class CategoryItem {
     required this.icon,
     required this.type,
     required this.colorValue,
+    this.usageCount = 0,
   });
 
   final int id;
@@ -15,11 +16,29 @@ class CategoryItem {
   final String icon;
   final String type; // 'income' | 'expense'
   final int colorValue;
+  final int usageCount;
 
   bool get isIncome => type == 'income';
   Color get color => Color(colorValue);
 
   IconData get iconData => iconFor(icon);
+
+  CategoryItem copyWith({
+    int? id,
+    String? name,
+    String? icon,
+    String? type,
+    int? colorValue,
+    int? usageCount,
+  }) =>
+      CategoryItem(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        icon: icon ?? this.icon,
+        type: type ?? this.type,
+        colorValue: colorValue ?? this.colorValue,
+        usageCount: usageCount ?? this.usageCount,
+      );
 
   /// Resolves a category's stored kebab-case `icon` string (e.g. `utensils`)
   /// to its Lucide glyph. Shared by anything that only has the raw icon
@@ -94,6 +113,8 @@ class CategoryItem {
         'layout-dashboard' => LucideIcons.layout_dashboard,
         'boxes' => LucideIcons.boxes,
         'stamp' => LucideIcons.stamp,
+        'bot' => LucideIcons.bot,
+        'cookie' => LucideIcons.cookie,
         _ => LucideIcons.receipt,
       };
 }

@@ -8,10 +8,13 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/transaction_item.dart';
 import 'transaction_providers.dart';
+import 'widgets/transaction_detail_sheet.dart';
 import 'widgets/transaction_tile.dart';
 
 class TransactionListScreen extends ConsumerWidget {
   const TransactionListScreen({super.key});
+
+  static final _groupDateFormatter = DateFormat('EEEE, d MMMM yyyy', 'id_ID');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,62 +70,73 @@ class TransactionListScreen extends ConsumerWidget {
               } else if (itemDay == yesterday) {
                 label = 'Kemarin';
               } else {
-                label = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(item.date);
+                label = _groupDateFormatter.format(item.date);
               }
               grouped.putIfAbsent(label, () => []).add(item);
             }
 
-            return ListView(
+            final entries = grouped.entries.toList();
+
+            return SmoothListView.builder(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.md,
                 AppSpacing.md,
                 FloatingNavBar.clearance,
               ),
-              children: [
-                for (final entry in grouped.entries) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: AppSpacing.md,
-                      bottom: AppSpacing.xs,
-                      left: AppSpacing.xs,
-                    ),
-                    child: Text(
-                      entry.key,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: scheme.outline,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
+              itemCount: entries.length,
+              itemBuilder: (context, index) {
+                final entry = entries[index];
+                return AnimatedScrollItem(
+                  index: index,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: AppSpacing.md,
+                          bottom: AppSpacing.xs,
+                          left: AppSpacing.xs,
+                        ),
+                        child: Text(
+                          entry.key,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: scheme.outline,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                      AppCard(
+                        enableAnimation: false,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.xs,
+                        ),
+                        child: Column(
+                          children: [
+                            for (var i = 0; i < entry.value.length; i++) ...[
+                              if (i > 0)
+                                Divider(
+                                  height: 1,
+                                  thickness: 1,
+                                  color: scheme.surfaceContainerHighest,
+                                ),
+                              TransactionTile(
+                                key: ValueKey(entry.value[i].id),
+                                item: entry.value[i],
+                                onTap: () => showTransactionDetailSheet(
+                                  context,
+                                  item: entry.value[i],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  AppCard(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.xs,
-                    ),
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < entry.value.length; i++) ...[
-                          if (i > 0)
-                            Divider(
-                              height: 1,
-                              thickness: 1,
-                              color: scheme.surfaceContainerHighest,
-                            ),
-                          TransactionTile(
-                            item: entry.value[i],
-                            onTap: () => _showTransactionDetail(
-                              context,
-                              ref,
-                              entry.value[i],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ],
+                );
+              },
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -135,59 +149,6 @@ class TransactionListScreen extends ConsumerWidget {
         onPressed: () => context.push('/transactions/add'),
         child: const Icon(LucideIcons.plus),
       ),
-    );
-  }
-
-  void _showTransactionDetail(
-    BuildContext context,
-    WidgetRef ref,
-    TransactionItem item,
-  ) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  item.note ?? item.categoryName,
-                  style: Theme.of(sheetContext)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Kategori: ${item.categoryName} • Rekening: ${item.accountName}',
-                  style: Theme.of(sheetContext).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                OutlinedButton.icon(
-                  icon: const Icon(LucideIcons.trash, color: Colors.red),
-                  label: const Text('Hapus Transaksi',
-                      style: TextStyle(color: Colors.red)),
-                  onPressed: () async {
-                    Navigator.pop(sheetContext);
-                    await ref
-                        .read(transactionRepositoryProvider)
-                        .delete(item.id);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Transaksi dihapus')),
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

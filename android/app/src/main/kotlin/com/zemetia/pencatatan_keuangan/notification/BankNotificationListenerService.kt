@@ -1,6 +1,7 @@
 package com.zemetia.pencatatan_keuangan.notification
 
 import android.app.Notification
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.service.notification.NotificationListenerService
@@ -24,6 +25,24 @@ class BankNotificationListenerService : NotificationListenerService() {
         const val KEY_WATCHED_PACKAGES = "watched_packages"
         const val KEY_PENDING_QUEUE = "pending_notifications"
         private const val MAX_QUEUE_SIZE = 200
+
+        fun tryRebind(context: Context) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                try {
+                    val component = ComponentName(context, BankNotificationListenerService::class.java)
+                    requestRebind(component)
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+    }
+
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        tryRebind(this)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -33,17 +52,32 @@ class BankNotificationListenerService : NotificationListenerService() {
         val watched = prefs.getStringSet(KEY_WATCHED_PACKAGES, emptySet()) ?: emptySet()
         if (sbn.packageName !in watched) return
 
-        val extras = sbn.notification.extras
-        val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
-        val text = (extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
-            ?: extras.getCharSequence(Notification.EXTRA_TEXT))?.toString()
-        if (text.isNullOrBlank()) return
+        val extras = sbn.notification.extras ?: return
+        val title = (extras.getCharSequence(Notification.EXTRA_TITLE)
+            ?: extras.getCharSequence(Notification.EXTRA_TITLE_BIG))?.toString()?.trim()
+
+        val textLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
+        val linesJoined = textLines?.joinToString("\n") { it.toString() }?.takeIf { it.isNotBlank() }
+
+        val bodyText = (extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
+            ?: extras.getCharSequence(Notification.EXTRA_TEXT)
+            ?: linesJoined
+            ?: extras.getCharSequence(Notification.EXTRA_SUB_TEXT)
+            ?: extras.getCharSequence(Notification.EXTRA_INFO_TEXT)
+            ?: extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)
+            ?: sbn.notification.tickerText)?.toString()?.trim()
+
+        val content = when {
+            !bodyText.isNullOrBlank() -> bodyText
+            !title.isNullOrBlank() -> title
+            else -> return
+        }
 
         val entry = JSONObject().apply {
             put("packageName", sbn.packageName)
             put("appLabel", resolveAppLabel(sbn.packageName))
-            put("title", title)
-            put("content", text)
+            if (!title.isNullOrBlank()) put("title", title)
+            put("content", content)
             put("postedAt", sbn.postTime)
         }
 

@@ -29,19 +29,21 @@ class MenuSection extends StatelessWidget {
     this.title,
     required this.items,
     this.delay = Duration.zero,
+    this.enableAnimation = true,
     super.key,
   });
 
   final String? title;
   final List<MenuSectionItem> items;
   final Duration delay;
+  final bool enableAnimation;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Column(
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (title != null) ...[
@@ -74,7 +76,18 @@ class MenuSection extends StatelessWidget {
           ),
         ),
       ],
-    ).animate(delay: delay).fadeIn(duration: 250.ms).slideY(begin: 0.04, end: 0);
+    );
+
+    if (!enableAnimation) {
+      return RepaintBoundary(child: content);
+    }
+
+    return RepaintBoundary(
+      child: content
+          .animate(delay: delay)
+          .fadeIn(duration: 250.ms)
+          .slideY(begin: 0.04, end: 0),
+    );
   }
 }
 

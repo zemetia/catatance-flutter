@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/constants/currencies.dart';
 import '../../../core/theme/app_colors.dart';
@@ -264,7 +263,7 @@ class _BatchDraftTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${draft.categoryName} • ${draft.accountName} • '
-                      '${DateFormat('d MMM', 'id_ID').format(draft.date)}'
+                      '${formatDateShort(draft.date)}'
                       '${draft.savingsGoalName != null ? ' • 🎯 ${draft.savingsGoalName}' : ''}',
                       style: textTheme.bodySmall?.copyWith(color: scheme.outline),
                       maxLines: 1,

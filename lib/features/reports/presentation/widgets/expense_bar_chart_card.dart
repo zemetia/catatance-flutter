@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/security/security_providers.dart';
@@ -44,7 +43,7 @@ class ExpenseBarChartCard extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return AppCard(
-      delay: 40.ms,
+      enableAnimation: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -1,6 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,7 +34,7 @@ class CategoryDonutCard extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return AppCard(
-      delay: 80.ms,
+      enableAnimation: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -178,7 +177,7 @@ class _DonutBodyState extends State<_DonutBody> {
                   centerSpaceRadius: 44,
                   sectionsSpace: 2,
                 ),
-              ).animate().fadeIn(duration: 300.ms),
+              ),
               SizedBox(
                 width: 104,
                 child: _DonutCenterContent(

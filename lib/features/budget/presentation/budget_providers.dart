@@ -141,9 +141,12 @@ BudgetItem _watchBudgetItem(Ref ref, Budget config, DateTime now) {
   );
 }
 
+final _budgetMonthYearFormatter = DateFormat('MMMM yyyy', 'id_ID');
+final _budgetMonthOnlyFormatter = DateFormat('MMMM', 'id_ID');
+
 String _periodLabel(BudgetPeriodType type, BudgetPeriod period) {
   if (type == BudgetPeriodType.monthly) {
-    return DateFormat('MMMM yyyy', 'id_ID').format(period.start);
+    return _budgetMonthYearFormatter.format(period.start);
   }
   return '${formatDateShort(period.start)} - ${formatDateShort(period.lastIncludedDay)}';
 }
@@ -183,5 +186,5 @@ final budgetActionProvider = AsyncNotifierProvider<BudgetActionNotifier, void>(
 
 /// "September" style label for the current budget period.
 final currentBudgetPeriodLabelProvider = Provider<String>((ref) {
-  return DateFormat('MMMM', 'id_ID').format(DateTime.now());
+  return _budgetMonthOnlyFormatter.format(DateTime.now());
 });

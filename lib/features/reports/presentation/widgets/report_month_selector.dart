@@ -17,6 +17,8 @@ class ReportMonthSelector extends StatelessWidget {
   final DateTime selected;
   final ValueChanged<DateTime> onSelected;
 
+  static final _monthFormatter = DateFormat('MMM', 'id_ID');
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -25,7 +27,7 @@ class ReportMonthSelector extends StatelessWidget {
         children: [
           for (final month in months) ...[
             _MonthPill(
-              label: DateFormat('MMM', 'id_ID').format(month),
+              label: _monthFormatter.format(month),
               selected: month.year == selected.year && month.month == selected.month,
               onTap: () => onSelected(month),
             ),

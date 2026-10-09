@@ -92,8 +92,11 @@ class BackupScreen extends ConsumerWidget {
     if (error != null) _showMessage(context, 'Gagal menghapus: $error');
   }
 
+  static final _backupDateFormatter =
+      DateFormat('d MMM yyyy • HH:mm', 'id_ID');
+
   static String _formatDate(DateTime date) =>
-      DateFormat('d MMM yyyy • HH:mm', 'id_ID').format(date);
+      _backupDateFormatter.format(date);
 
   static String _formatSize(int bytes) {
     if (bytes < 1024) return '$bytes B';

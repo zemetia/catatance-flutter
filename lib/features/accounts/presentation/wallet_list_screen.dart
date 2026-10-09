@@ -200,7 +200,7 @@ class _PersonalWallets extends ConsumerWidget {
       );
     }
 
-    return ListView(
+    return SmoothListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
         0,

@@ -18,30 +18,43 @@ final _subThemes = FlexSubThemesData(
   useM2StyleDividerInM3: true,
 );
 
+final _fontFamily = GoogleFonts.plusJakartaSans().fontFamily;
+
+final _lightThemeCache = <AppColorTheme, ThemeData>{};
+final _darkThemeCache = <AppColorTheme, ThemeData>{};
+
 ThemeData buildLightTheme([AppColorTheme colorTheme = AppColorTheme.emerald]) =>
-    FlexThemeData.light(
-      colors: colorTheme.toFlexSchemeColor(),
-      useMaterial3: true,
-      subThemesData: _subThemes,
-      fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
-      visualDensity: FlexColorScheme.comfortablePlatformDensity,
-      // Soft-tinted surfaces instead of a stark FFFFFF background — every
-      // surface picks up a faint wash of the seed color so cards read as
-      // "off-white", not paper-white.
-      surfaceMode: FlexSurfaceMode.highBackgroundLowScaffold,
-      blendLevel: 9,
+    _lightThemeCache.putIfAbsent(
+      colorTheme,
+      () => FlexThemeData.light(
+        colors: colorTheme.toFlexSchemeColor(),
+        useMaterial3: true,
+        subThemesData: _subThemes,
+        fontFamily: _fontFamily,
+        fontFamilyFallback: const ['Roboto', 'Segoe UI', 'Arial', 'sans-serif'],
+        visualDensity: FlexColorScheme.comfortablePlatformDensity,
+        // Soft-tinted surfaces instead of a stark FFFFFF background — every
+        // surface picks up a faint wash of the seed color so cards read as
+        // "off-white", not paper-white.
+        surfaceMode: FlexSurfaceMode.highBackgroundLowScaffold,
+        blendLevel: 9,
+      ),
     );
 
 ThemeData buildDarkTheme([AppColorTheme colorTheme = AppColorTheme.emerald]) =>
-    FlexThemeData.dark(
-      colors: colorTheme.toFlexSchemeColor(),
-      useMaterial3: true,
-      subThemesData: _subThemes,
-      fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
-      visualDensity: FlexColorScheme.comfortablePlatformDensity,
-      // Never true black — surfaces stay a soft charcoal tinted with the
-      // seed color so cards/sheets read as "near-black", not 000000.
-      darkIsTrueBlack: false,
-      surfaceMode: FlexSurfaceMode.highBackgroundLowScaffold,
-      blendLevel: 18,
+    _darkThemeCache.putIfAbsent(
+      colorTheme,
+      () => FlexThemeData.dark(
+        colors: colorTheme.toFlexSchemeColor(),
+        useMaterial3: true,
+        subThemesData: _subThemes,
+        fontFamily: _fontFamily,
+        fontFamilyFallback: const ['Roboto', 'Segoe UI', 'Arial', 'sans-serif'],
+        visualDensity: FlexColorScheme.comfortablePlatformDensity,
+        // Never true black — surfaces stay a soft charcoal tinted with the
+        // seed color so cards/sheets read as "near-black", not 000000.
+        darkIsTrueBlack: false,
+        surfaceMode: FlexSurfaceMode.highBackgroundLowScaffold,
+        blendLevel: 18,
+      ),
     );

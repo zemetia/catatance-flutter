@@ -7182,6 +7182,859 @@ class EarnedBadgesCompanion extends UpdateCompanion<EarnedBadge> {
   }
 }
 
+class $WishlistItemsTable extends WishlistItems
+    with TableInfo<$WishlistItemsTable, WishlistItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WishlistItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _estimatedPriceCentsMeta =
+      const VerificationMeta('estimatedPriceCents');
+  @override
+  late final GeneratedColumn<int> estimatedPriceCents = GeneratedColumn<int>(
+    'estimated_price_cents',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coolingDaysMeta = const VerificationMeta(
+    'coolingDays',
+  );
+  @override
+  late final GeneratedColumn<int> coolingDays = GeneratedColumn<int>(
+    'cooling_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(30),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _readyAtMeta = const VerificationMeta(
+    'readyAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> readyAt = GeneratedColumn<DateTime>(
+    'ready_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('cooling_off'),
+  );
+  static const VerificationMeta _decisionDateMeta = const VerificationMeta(
+    'decisionDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> decisionDate = GeneratedColumn<DateTime>(
+    'decision_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _decisionNoteMeta = const VerificationMeta(
+    'decisionNote',
+  );
+  @override
+  late final GeneratedColumn<String> decisionNote = GeneratedColumn<String>(
+    'decision_note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('medium'),
+  );
+  static const VerificationMeta _categoryNameMeta = const VerificationMeta(
+    'categoryName',
+  );
+  @override
+  late final GeneratedColumn<String> categoryName = GeneratedColumn<String>(
+    'category_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _iconKeyMeta = const VerificationMeta(
+    'iconKey',
+  );
+  @override
+  late final GeneratedColumn<String> iconKey = GeneratedColumn<String>(
+    'icon_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('shopping-bag'),
+  );
+  static const VerificationMeta _savedAmountCentsMeta = const VerificationMeta(
+    'savedAmountCents',
+  );
+  @override
+  late final GeneratedColumn<int> savedAmountCents = GeneratedColumn<int>(
+    'saved_amount_cents',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    estimatedPriceCents,
+    reason,
+    url,
+    coolingDays,
+    createdAt,
+    readyAt,
+    status,
+    decisionDate,
+    decisionNote,
+    priority,
+    categoryName,
+    iconKey,
+    savedAmountCents,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wishlist_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WishlistItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('estimated_price_cents')) {
+      context.handle(
+        _estimatedPriceCentsMeta,
+        estimatedPriceCents.isAcceptableOrUnknown(
+          data['estimated_price_cents']!,
+          _estimatedPriceCentsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_estimatedPriceCentsMeta);
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    }
+    if (data.containsKey('cooling_days')) {
+      context.handle(
+        _coolingDaysMeta,
+        coolingDays.isAcceptableOrUnknown(
+          data['cooling_days']!,
+          _coolingDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('ready_at')) {
+      context.handle(
+        _readyAtMeta,
+        readyAt.isAcceptableOrUnknown(data['ready_at']!, _readyAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_readyAtMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('decision_date')) {
+      context.handle(
+        _decisionDateMeta,
+        decisionDate.isAcceptableOrUnknown(
+          data['decision_date']!,
+          _decisionDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('decision_note')) {
+      context.handle(
+        _decisionNoteMeta,
+        decisionNote.isAcceptableOrUnknown(
+          data['decision_note']!,
+          _decisionNoteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('category_name')) {
+      context.handle(
+        _categoryNameMeta,
+        categoryName.isAcceptableOrUnknown(
+          data['category_name']!,
+          _categoryNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('icon_key')) {
+      context.handle(
+        _iconKeyMeta,
+        iconKey.isAcceptableOrUnknown(data['icon_key']!, _iconKeyMeta),
+      );
+    }
+    if (data.containsKey('saved_amount_cents')) {
+      context.handle(
+        _savedAmountCentsMeta,
+        savedAmountCents.isAcceptableOrUnknown(
+          data['saved_amount_cents']!,
+          _savedAmountCentsMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WishlistItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WishlistItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      estimatedPriceCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}estimated_price_cents'],
+      )!,
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      ),
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      ),
+      coolingDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cooling_days'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      readyAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ready_at'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      decisionDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}decision_date'],
+      ),
+      decisionNote: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}decision_note'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      categoryName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_name'],
+      ),
+      iconKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_key'],
+      )!,
+      savedAmountCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}saved_amount_cents'],
+      )!,
+    );
+  }
+
+  @override
+  $WishlistItemsTable createAlias(String alias) {
+    return $WishlistItemsTable(attachedDatabase, alias);
+  }
+}
+
+class WishlistItem extends DataClass implements Insertable<WishlistItem> {
+  final int id;
+  final String name;
+  final int estimatedPriceCents;
+  final String? reason;
+  final String? url;
+  final int coolingDays;
+  final DateTime createdAt;
+  final DateTime readyAt;
+  final String status;
+  final DateTime? decisionDate;
+  final String? decisionNote;
+  final String priority;
+  final String? categoryName;
+  final String iconKey;
+  final int savedAmountCents;
+  const WishlistItem({
+    required this.id,
+    required this.name,
+    required this.estimatedPriceCents,
+    this.reason,
+    this.url,
+    required this.coolingDays,
+    required this.createdAt,
+    required this.readyAt,
+    required this.status,
+    this.decisionDate,
+    this.decisionNote,
+    required this.priority,
+    this.categoryName,
+    required this.iconKey,
+    required this.savedAmountCents,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['estimated_price_cents'] = Variable<int>(estimatedPriceCents);
+    if (!nullToAbsent || reason != null) {
+      map['reason'] = Variable<String>(reason);
+    }
+    if (!nullToAbsent || url != null) {
+      map['url'] = Variable<String>(url);
+    }
+    map['cooling_days'] = Variable<int>(coolingDays);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['ready_at'] = Variable<DateTime>(readyAt);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || decisionDate != null) {
+      map['decision_date'] = Variable<DateTime>(decisionDate);
+    }
+    if (!nullToAbsent || decisionNote != null) {
+      map['decision_note'] = Variable<String>(decisionNote);
+    }
+    map['priority'] = Variable<String>(priority);
+    if (!nullToAbsent || categoryName != null) {
+      map['category_name'] = Variable<String>(categoryName);
+    }
+    map['icon_key'] = Variable<String>(iconKey);
+    map['saved_amount_cents'] = Variable<int>(savedAmountCents);
+    return map;
+  }
+
+  WishlistItemsCompanion toCompanion(bool nullToAbsent) {
+    return WishlistItemsCompanion(
+      id: Value(id),
+      name: Value(name),
+      estimatedPriceCents: Value(estimatedPriceCents),
+      reason: reason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reason),
+      url: url == null && nullToAbsent ? const Value.absent() : Value(url),
+      coolingDays: Value(coolingDays),
+      createdAt: Value(createdAt),
+      readyAt: Value(readyAt),
+      status: Value(status),
+      decisionDate: decisionDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(decisionDate),
+      decisionNote: decisionNote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(decisionNote),
+      priority: Value(priority),
+      categoryName: categoryName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryName),
+      iconKey: Value(iconKey),
+      savedAmountCents: Value(savedAmountCents),
+    );
+  }
+
+  factory WishlistItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WishlistItem(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      estimatedPriceCents: serializer.fromJson<int>(
+        json['estimatedPriceCents'],
+      ),
+      reason: serializer.fromJson<String?>(json['reason']),
+      url: serializer.fromJson<String?>(json['url']),
+      coolingDays: serializer.fromJson<int>(json['coolingDays']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      readyAt: serializer.fromJson<DateTime>(json['readyAt']),
+      status: serializer.fromJson<String>(json['status']),
+      decisionDate: serializer.fromJson<DateTime?>(json['decisionDate']),
+      decisionNote: serializer.fromJson<String?>(json['decisionNote']),
+      priority: serializer.fromJson<String>(json['priority']),
+      categoryName: serializer.fromJson<String?>(json['categoryName']),
+      iconKey: serializer.fromJson<String>(json['iconKey']),
+      savedAmountCents: serializer.fromJson<int>(json['savedAmountCents']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'estimatedPriceCents': serializer.toJson<int>(estimatedPriceCents),
+      'reason': serializer.toJson<String?>(reason),
+      'url': serializer.toJson<String?>(url),
+      'coolingDays': serializer.toJson<int>(coolingDays),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'readyAt': serializer.toJson<DateTime>(readyAt),
+      'status': serializer.toJson<String>(status),
+      'decisionDate': serializer.toJson<DateTime?>(decisionDate),
+      'decisionNote': serializer.toJson<String?>(decisionNote),
+      'priority': serializer.toJson<String>(priority),
+      'categoryName': serializer.toJson<String?>(categoryName),
+      'iconKey': serializer.toJson<String>(iconKey),
+      'savedAmountCents': serializer.toJson<int>(savedAmountCents),
+    };
+  }
+
+  WishlistItem copyWith({
+    int? id,
+    String? name,
+    int? estimatedPriceCents,
+    Value<String?> reason = const Value.absent(),
+    Value<String?> url = const Value.absent(),
+    int? coolingDays,
+    DateTime? createdAt,
+    DateTime? readyAt,
+    String? status,
+    Value<DateTime?> decisionDate = const Value.absent(),
+    Value<String?> decisionNote = const Value.absent(),
+    String? priority,
+    Value<String?> categoryName = const Value.absent(),
+    String? iconKey,
+    int? savedAmountCents,
+  }) => WishlistItem(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    estimatedPriceCents: estimatedPriceCents ?? this.estimatedPriceCents,
+    reason: reason.present ? reason.value : this.reason,
+    url: url.present ? url.value : this.url,
+    coolingDays: coolingDays ?? this.coolingDays,
+    createdAt: createdAt ?? this.createdAt,
+    readyAt: readyAt ?? this.readyAt,
+    status: status ?? this.status,
+    decisionDate: decisionDate.present ? decisionDate.value : this.decisionDate,
+    decisionNote: decisionNote.present ? decisionNote.value : this.decisionNote,
+    priority: priority ?? this.priority,
+    categoryName: categoryName.present ? categoryName.value : this.categoryName,
+    iconKey: iconKey ?? this.iconKey,
+    savedAmountCents: savedAmountCents ?? this.savedAmountCents,
+  );
+  WishlistItem copyWithCompanion(WishlistItemsCompanion data) {
+    return WishlistItem(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      estimatedPriceCents: data.estimatedPriceCents.present
+          ? data.estimatedPriceCents.value
+          : this.estimatedPriceCents,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      url: data.url.present ? data.url.value : this.url,
+      coolingDays: data.coolingDays.present
+          ? data.coolingDays.value
+          : this.coolingDays,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      readyAt: data.readyAt.present ? data.readyAt.value : this.readyAt,
+      status: data.status.present ? data.status.value : this.status,
+      decisionDate: data.decisionDate.present
+          ? data.decisionDate.value
+          : this.decisionDate,
+      decisionNote: data.decisionNote.present
+          ? data.decisionNote.value
+          : this.decisionNote,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      categoryName: data.categoryName.present
+          ? data.categoryName.value
+          : this.categoryName,
+      iconKey: data.iconKey.present ? data.iconKey.value : this.iconKey,
+      savedAmountCents: data.savedAmountCents.present
+          ? data.savedAmountCents.value
+          : this.savedAmountCents,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WishlistItem(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('estimatedPriceCents: $estimatedPriceCents, ')
+          ..write('reason: $reason, ')
+          ..write('url: $url, ')
+          ..write('coolingDays: $coolingDays, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('readyAt: $readyAt, ')
+          ..write('status: $status, ')
+          ..write('decisionDate: $decisionDate, ')
+          ..write('decisionNote: $decisionNote, ')
+          ..write('priority: $priority, ')
+          ..write('categoryName: $categoryName, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('savedAmountCents: $savedAmountCents')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    estimatedPriceCents,
+    reason,
+    url,
+    coolingDays,
+    createdAt,
+    readyAt,
+    status,
+    decisionDate,
+    decisionNote,
+    priority,
+    categoryName,
+    iconKey,
+    savedAmountCents,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WishlistItem &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.estimatedPriceCents == this.estimatedPriceCents &&
+          other.reason == this.reason &&
+          other.url == this.url &&
+          other.coolingDays == this.coolingDays &&
+          other.createdAt == this.createdAt &&
+          other.readyAt == this.readyAt &&
+          other.status == this.status &&
+          other.decisionDate == this.decisionDate &&
+          other.decisionNote == this.decisionNote &&
+          other.priority == this.priority &&
+          other.categoryName == this.categoryName &&
+          other.iconKey == this.iconKey &&
+          other.savedAmountCents == this.savedAmountCents);
+}
+
+class WishlistItemsCompanion extends UpdateCompanion<WishlistItem> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<int> estimatedPriceCents;
+  final Value<String?> reason;
+  final Value<String?> url;
+  final Value<int> coolingDays;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> readyAt;
+  final Value<String> status;
+  final Value<DateTime?> decisionDate;
+  final Value<String?> decisionNote;
+  final Value<String> priority;
+  final Value<String?> categoryName;
+  final Value<String> iconKey;
+  final Value<int> savedAmountCents;
+  const WishlistItemsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.estimatedPriceCents = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.url = const Value.absent(),
+    this.coolingDays = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.readyAt = const Value.absent(),
+    this.status = const Value.absent(),
+    this.decisionDate = const Value.absent(),
+    this.decisionNote = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.categoryName = const Value.absent(),
+    this.iconKey = const Value.absent(),
+    this.savedAmountCents = const Value.absent(),
+  });
+  WishlistItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required int estimatedPriceCents,
+    this.reason = const Value.absent(),
+    this.url = const Value.absent(),
+    this.coolingDays = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required DateTime readyAt,
+    this.status = const Value.absent(),
+    this.decisionDate = const Value.absent(),
+    this.decisionNote = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.categoryName = const Value.absent(),
+    this.iconKey = const Value.absent(),
+    this.savedAmountCents = const Value.absent(),
+  }) : name = Value(name),
+       estimatedPriceCents = Value(estimatedPriceCents),
+       readyAt = Value(readyAt);
+  static Insertable<WishlistItem> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<int>? estimatedPriceCents,
+    Expression<String>? reason,
+    Expression<String>? url,
+    Expression<int>? coolingDays,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? readyAt,
+    Expression<String>? status,
+    Expression<DateTime>? decisionDate,
+    Expression<String>? decisionNote,
+    Expression<String>? priority,
+    Expression<String>? categoryName,
+    Expression<String>? iconKey,
+    Expression<int>? savedAmountCents,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (estimatedPriceCents != null)
+        'estimated_price_cents': estimatedPriceCents,
+      if (reason != null) 'reason': reason,
+      if (url != null) 'url': url,
+      if (coolingDays != null) 'cooling_days': coolingDays,
+      if (createdAt != null) 'created_at': createdAt,
+      if (readyAt != null) 'ready_at': readyAt,
+      if (status != null) 'status': status,
+      if (decisionDate != null) 'decision_date': decisionDate,
+      if (decisionNote != null) 'decision_note': decisionNote,
+      if (priority != null) 'priority': priority,
+      if (categoryName != null) 'category_name': categoryName,
+      if (iconKey != null) 'icon_key': iconKey,
+      if (savedAmountCents != null) 'saved_amount_cents': savedAmountCents,
+    });
+  }
+
+  WishlistItemsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<int>? estimatedPriceCents,
+    Value<String?>? reason,
+    Value<String?>? url,
+    Value<int>? coolingDays,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? readyAt,
+    Value<String>? status,
+    Value<DateTime?>? decisionDate,
+    Value<String?>? decisionNote,
+    Value<String>? priority,
+    Value<String?>? categoryName,
+    Value<String>? iconKey,
+    Value<int>? savedAmountCents,
+  }) {
+    return WishlistItemsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      estimatedPriceCents: estimatedPriceCents ?? this.estimatedPriceCents,
+      reason: reason ?? this.reason,
+      url: url ?? this.url,
+      coolingDays: coolingDays ?? this.coolingDays,
+      createdAt: createdAt ?? this.createdAt,
+      readyAt: readyAt ?? this.readyAt,
+      status: status ?? this.status,
+      decisionDate: decisionDate ?? this.decisionDate,
+      decisionNote: decisionNote ?? this.decisionNote,
+      priority: priority ?? this.priority,
+      categoryName: categoryName ?? this.categoryName,
+      iconKey: iconKey ?? this.iconKey,
+      savedAmountCents: savedAmountCents ?? this.savedAmountCents,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (estimatedPriceCents.present) {
+      map['estimated_price_cents'] = Variable<int>(estimatedPriceCents.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (coolingDays.present) {
+      map['cooling_days'] = Variable<int>(coolingDays.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (readyAt.present) {
+      map['ready_at'] = Variable<DateTime>(readyAt.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (decisionDate.present) {
+      map['decision_date'] = Variable<DateTime>(decisionDate.value);
+    }
+    if (decisionNote.present) {
+      map['decision_note'] = Variable<String>(decisionNote.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (categoryName.present) {
+      map['category_name'] = Variable<String>(categoryName.value);
+    }
+    if (iconKey.present) {
+      map['icon_key'] = Variable<String>(iconKey.value);
+    }
+    if (savedAmountCents.present) {
+      map['saved_amount_cents'] = Variable<int>(savedAmountCents.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WishlistItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('estimatedPriceCents: $estimatedPriceCents, ')
+          ..write('reason: $reason, ')
+          ..write('url: $url, ')
+          ..write('coolingDays: $coolingDays, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('readyAt: $readyAt, ')
+          ..write('status: $status, ')
+          ..write('decisionDate: $decisionDate, ')
+          ..write('decisionNote: $decisionNote, ')
+          ..write('priority: $priority, ')
+          ..write('categoryName: $categoryName, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('savedAmountCents: $savedAmountCents')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7201,6 +8054,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CapturedBankNotificationsTable capturedBankNotifications =
       $CapturedBankNotificationsTable(this);
   late final $EarnedBadgesTable earnedBadges = $EarnedBadgesTable(this);
+  late final $WishlistItemsTable wishlistItems = $WishlistItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7219,6 +8073,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     bankNotificationMappings,
     capturedBankNotifications,
     earnedBadges,
+    wishlistItems,
   ];
 }
 
@@ -14252,6 +15107,411 @@ typedef $$EarnedBadgesTableProcessedTableManager =
       EarnedBadge,
       PrefetchHooks Function()
     >;
+typedef $$WishlistItemsTableCreateCompanionBuilder =
+    WishlistItemsCompanion Function({
+      Value<int> id,
+      required String name,
+      required int estimatedPriceCents,
+      Value<String?> reason,
+      Value<String?> url,
+      Value<int> coolingDays,
+      Value<DateTime> createdAt,
+      required DateTime readyAt,
+      Value<String> status,
+      Value<DateTime?> decisionDate,
+      Value<String?> decisionNote,
+      Value<String> priority,
+      Value<String?> categoryName,
+      Value<String> iconKey,
+      Value<int> savedAmountCents,
+    });
+typedef $$WishlistItemsTableUpdateCompanionBuilder =
+    WishlistItemsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<int> estimatedPriceCents,
+      Value<String?> reason,
+      Value<String?> url,
+      Value<int> coolingDays,
+      Value<DateTime> createdAt,
+      Value<DateTime> readyAt,
+      Value<String> status,
+      Value<DateTime?> decisionDate,
+      Value<String?> decisionNote,
+      Value<String> priority,
+      Value<String?> categoryName,
+      Value<String> iconKey,
+      Value<int> savedAmountCents,
+    });
+
+class $$WishlistItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get estimatedPriceCents => $composableBuilder(
+    column: $table.estimatedPriceCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get coolingDays => $composableBuilder(
+    column: $table.coolingDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get readyAt => $composableBuilder(
+    column: $table.readyAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get decisionDate => $composableBuilder(
+    column: $table.decisionDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get decisionNote => $composableBuilder(
+    column: $table.decisionNote,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryName => $composableBuilder(
+    column: $table.categoryName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get savedAmountCents => $composableBuilder(
+    column: $table.savedAmountCents,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WishlistItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get estimatedPriceCents => $composableBuilder(
+    column: $table.estimatedPriceCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get coolingDays => $composableBuilder(
+    column: $table.coolingDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get readyAt => $composableBuilder(
+    column: $table.readyAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get decisionDate => $composableBuilder(
+    column: $table.decisionDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get decisionNote => $composableBuilder(
+    column: $table.decisionNote,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryName => $composableBuilder(
+    column: $table.categoryName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get savedAmountCents => $composableBuilder(
+    column: $table.savedAmountCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WishlistItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WishlistItemsTable> {
+  $$WishlistItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get estimatedPriceCents => $composableBuilder(
+    column: $table.estimatedPriceCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<int> get coolingDays => $composableBuilder(
+    column: $table.coolingDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get readyAt =>
+      $composableBuilder(column: $table.readyAt, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get decisionDate => $composableBuilder(
+    column: $table.decisionDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get decisionNote => $composableBuilder(
+    column: $table.decisionNote,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryName => $composableBuilder(
+    column: $table.categoryName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get iconKey =>
+      $composableBuilder(column: $table.iconKey, builder: (column) => column);
+
+  GeneratedColumn<int> get savedAmountCents => $composableBuilder(
+    column: $table.savedAmountCents,
+    builder: (column) => column,
+  );
+}
+
+class $$WishlistItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WishlistItemsTable,
+          WishlistItem,
+          $$WishlistItemsTableFilterComposer,
+          $$WishlistItemsTableOrderingComposer,
+          $$WishlistItemsTableAnnotationComposer,
+          $$WishlistItemsTableCreateCompanionBuilder,
+          $$WishlistItemsTableUpdateCompanionBuilder,
+          (
+            WishlistItem,
+            BaseReferences<_$AppDatabase, $WishlistItemsTable, WishlistItem>,
+          ),
+          WishlistItem,
+          PrefetchHooks Function()
+        > {
+  $$WishlistItemsTableTableManager(_$AppDatabase db, $WishlistItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WishlistItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WishlistItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WishlistItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> estimatedPriceCents = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
+                Value<String?> url = const Value.absent(),
+                Value<int> coolingDays = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> readyAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> decisionDate = const Value.absent(),
+                Value<String?> decisionNote = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String?> categoryName = const Value.absent(),
+                Value<String> iconKey = const Value.absent(),
+                Value<int> savedAmountCents = const Value.absent(),
+              }) => WishlistItemsCompanion(
+                id: id,
+                name: name,
+                estimatedPriceCents: estimatedPriceCents,
+                reason: reason,
+                url: url,
+                coolingDays: coolingDays,
+                createdAt: createdAt,
+                readyAt: readyAt,
+                status: status,
+                decisionDate: decisionDate,
+                decisionNote: decisionNote,
+                priority: priority,
+                categoryName: categoryName,
+                iconKey: iconKey,
+                savedAmountCents: savedAmountCents,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required int estimatedPriceCents,
+                Value<String?> reason = const Value.absent(),
+                Value<String?> url = const Value.absent(),
+                Value<int> coolingDays = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                required DateTime readyAt,
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> decisionDate = const Value.absent(),
+                Value<String?> decisionNote = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String?> categoryName = const Value.absent(),
+                Value<String> iconKey = const Value.absent(),
+                Value<int> savedAmountCents = const Value.absent(),
+              }) => WishlistItemsCompanion.insert(
+                id: id,
+                name: name,
+                estimatedPriceCents: estimatedPriceCents,
+                reason: reason,
+                url: url,
+                coolingDays: coolingDays,
+                createdAt: createdAt,
+                readyAt: readyAt,
+                status: status,
+                decisionDate: decisionDate,
+                decisionNote: decisionNote,
+                priority: priority,
+                categoryName: categoryName,
+                iconKey: iconKey,
+                savedAmountCents: savedAmountCents,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WishlistItemsTable, WishlistItem>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $WishlistItemsTable,
+                    WishlistItem
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WishlistItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WishlistItemsTable,
+      WishlistItem,
+      $$WishlistItemsTableFilterComposer,
+      $$WishlistItemsTableOrderingComposer,
+      $$WishlistItemsTableAnnotationComposer,
+      $$WishlistItemsTableCreateCompanionBuilder,
+      $$WishlistItemsTableUpdateCompanionBuilder,
+      (
+        WishlistItem,
+        BaseReferences<_$AppDatabase, $WishlistItemsTable, WishlistItem>,
+      ),
+      WishlistItem,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -14288,4 +15548,6 @@ class $AppDatabaseManager {
       );
   $$EarnedBadgesTableTableManager get earnedBadges =>
       $$EarnedBadgesTableTableManager(_db, _db.earnedBadges);
+  $$WishlistItemsTableTableManager get wishlistItems =>
+      $$WishlistItemsTableTableManager(_db, _db.wishlistItems);
 }

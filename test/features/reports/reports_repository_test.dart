@@ -97,4 +97,13 @@ void main() {
       expect(entry.share, lessThanOrEqualTo(1));
     }
   });
+
+  test('ReportsRepository returns transaction count for current month', () async {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month);
+    final endExclusive = DateTime(now.year, now.month + 1);
+
+    final count = await repository.watchTransactionCount(start, endExclusive).first;
+    expect(count, greaterThan(0));
+  });
 }

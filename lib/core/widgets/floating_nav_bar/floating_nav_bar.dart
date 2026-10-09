@@ -75,7 +75,7 @@ class FloatingNavBar extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(_radius),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
                     height: _barHeight,
                     decoration: BoxDecoration(
@@ -215,11 +215,6 @@ class _CenterActionButton extends StatelessWidget {
           child: Icon(LucideIcons.plus, color: scheme.onPrimary, size: 30),
         ),
       ),
-    ).animate().scale(
-      begin: const Offset(0.8, 0.8),
-      end: const Offset(1, 1),
-      duration: 220.ms,
-      curve: Curves.easeOutBack,
     );
   }
 }

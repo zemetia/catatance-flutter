@@ -108,11 +108,15 @@ class MainActivity : FlutterFragmentActivity() {
                 "isListenerEnabled" -> {
                     val enabled = NotificationManagerCompat.getEnabledListenerPackages(this)
                         .contains(packageName)
+                    if (enabled) {
+                        BankNotificationListenerService.tryRebind(this)
+                    }
                     result.success(enabled)
                 }
 
                 "openListenerSettings" -> {
                     startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                    BankNotificationListenerService.tryRebind(this)
                     result.success(null)
                 }
 
@@ -133,7 +137,7 @@ class MainActivity : FlutterFragmentActivity() {
                             mapOf(
                                 "packageName" to entry.optString("packageName"),
                                 "appLabel" to entry.optString("appLabel"),
-                                "title" to entry.opt("title"),
+                                "title" to if (entry.isNull("title")) null else entry.optString("title"),
                                 "content" to entry.optString("content"),
                                 "postedAt" to entry.optLong("postedAt"),
                             ),
@@ -153,6 +157,7 @@ class MainActivity : FlutterFragmentActivity() {
                             packages,
                         )
                         .apply()
+                    BankNotificationListenerService.tryRebind(this)
                     result.success(null)
                 }
 

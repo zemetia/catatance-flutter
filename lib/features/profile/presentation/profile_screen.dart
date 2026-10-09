@@ -92,10 +92,7 @@ class ProfileScreen extends ConsumerWidget {
       ThemeMode.light => 'Terang',
       ThemeMode.system => 'Sistem',
     };
-    final profile = ref.watch(userProfileProvider);
     final language = ref.watch(appLanguageProvider);
-    final totalBalance = ref.watch(totalBalanceProvider);
-    final walletCount = ref.watch(accountListProvider).value?.length ?? 0;
 
     final accountItems = [
       MenuSectionItem(
@@ -175,6 +172,12 @@ class ProfileScreen extends ConsumerWidget {
         label: 'Semua Target',
         description: 'Lacak progres target tabunganmu',
         onTap: () => context.push('/savings-goals'),
+      ),
+      MenuSectionItem(
+        icon: LucideIcons.hourglass,
+        label: 'Wishlist Anti-Impulsif',
+        description: 'Tunda 30 hari & selamatkan uangmu',
+        onTap: () => context.push('/wishlist'),
       ),
       MenuSectionItem(
         icon: LucideIcons.hand_coins,
@@ -292,16 +295,28 @@ class ProfileScreen extends ConsumerWidget {
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.lg),
-            ProfileHeaderCard(
-              displayName: profile.displayName,
-              email: profile.email,
-              onEditTap: () => context.push('/profile/account'),
+            Consumer(
+              builder: (context, ref, _) {
+                final profile = ref.watch(userProfileProvider);
+                return ProfileHeaderCard(
+                  displayName: profile.displayName,
+                  email: profile.email,
+                  onEditTap: () => context.push('/profile/account'),
+                );
+              },
             ),
             const SizedBox(height: AppSpacing.md),
-            ProfileBalanceCard(
-              balanceCents: totalBalance,
-              walletCount: walletCount,
-              onTap: () => context.push('/wallets'),
+            Consumer(
+              builder: (context, ref, _) {
+                final totalBalance = ref.watch(totalBalanceProvider);
+                final walletCount =
+                    ref.watch(accountListProvider).value?.length ?? 0;
+                return ProfileBalanceCard(
+                  balanceCents: totalBalance,
+                  walletCount: walletCount,
+                  onTap: () => context.push('/wallets'),
+                );
+              },
             ),
             const SizedBox(height: AppSpacing.lg),
             MenuSection(

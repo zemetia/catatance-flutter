@@ -59,15 +59,40 @@ class ReportsRepository {
     DateTime endExclusive, {
     ReportMode mode = ReportMode.expense,
   }) {
-    return _watchRows(start, endExclusive, mode).map((rows) {
-      var total = 0;
-      for (final row in rows) {
-        final tx = row.readTable(_db.transactions);
-        final category = row.readTable(_db.categories);
-        total += _signedAmount(tx.amountCents, category.type, mode);
-      }
-      return total;
-    });
+    final String selectExpr;
+    final String modeFilter;
+
+    switch (mode) {
+      case ReportMode.expense:
+        selectExpr = 'IFNULL(SUM(t.amount_cents), 0)';
+        modeFilter = "AND c.type = 'expense'";
+      case ReportMode.income:
+        selectExpr = 'IFNULL(SUM(t.amount_cents), 0)';
+        modeFilter = "AND c.type = 'income'";
+      case ReportMode.net:
+        selectExpr =
+            "IFNULL(SUM(CASE WHEN c.type = 'income' THEN t.amount_cents WHEN c.type = 'expense' THEN -t.amount_cents ELSE 0 END), 0)";
+        modeFilter = '';
+    }
+
+    final sql = '''
+      SELECT $selectExpr AS total
+      FROM transactions t
+      INNER JOIN categories c ON c.id = t.category_id
+      WHERE t.date >= ? AND t.date < ? $modeFilter
+    ''';
+
+    return _db
+        .customSelect(
+          sql,
+          variables: [
+            Variable.withDateTime(start),
+            Variable.withDateTime(endExclusive),
+          ],
+          readsFrom: {_db.transactions, _db.categories},
+        )
+        .watchSingle()
+        .map((row) => row.read<int>('total'));
   }
 
   /// Total expense in `[start, endExclusive)`.
@@ -89,35 +114,85 @@ class ReportsRepository {
     DateTime endExclusive, {
     ReportMode mode = ReportMode.expense,
   }) {
-    return _watchRows(start, endExclusive, mode).map((rows) {
-      final totals = <int, int>{};
-      final counts = <int, int>{};
-      final categories = <int, Category>{};
-      var grandTotal = 0;
-      for (final row in rows) {
-        final tx = row.readTable(_db.transactions);
-        final category = row.readTable(_db.categories);
-        final amount = _signedAmount(tx.amountCents, category.type, mode);
-        totals[category.id] = (totals[category.id] ?? 0) + amount;
-        counts[category.id] = (counts[category.id] ?? 0) + (amount == 0 ? 0 : 1);
-        categories[category.id] = category;
-        grandTotal += amount.abs();
-      }
-      final entries = totals.entries.toList()
-        ..sort((a, b) => b.value.abs().compareTo(a.value.abs()));
-      return [
-        for (final entry in entries)
-          CategorySpending(
-            categoryId: entry.key,
-            name: categories[entry.key]!.name,
-            icon: categories[entry.key]!.icon,
-            colorValue: categories[entry.key]!.colorValue,
-            totalCents: entry.value,
-            share: grandTotal == 0 ? 0 : entry.value.abs() / grandTotal,
-            count: counts[entry.key] ?? 0,
-          ),
-      ];
-    });
+    final String modeFilter;
+    switch (mode) {
+      case ReportMode.expense:
+        modeFilter = "AND c.type = 'expense'";
+      case ReportMode.income:
+        modeFilter = "AND c.type = 'income'";
+      case ReportMode.net:
+        modeFilter = "AND c.type IN ('expense', 'income')";
+    }
+
+    final sql = '''
+      SELECT 
+        c.id AS category_id,
+        c.name AS category_name,
+        c.icon AS category_icon,
+        c.color_value AS category_color_value,
+        c.type AS category_type,
+        SUM(t.amount_cents) AS total_cents,
+        COUNT(t.id) AS tx_count
+      FROM transactions t
+      INNER JOIN categories c ON c.id = t.category_id
+      WHERE t.date >= ? AND t.date < ? $modeFilter
+      GROUP BY c.id
+    ''';
+
+    return _db
+        .customSelect(
+          sql,
+          variables: [
+            Variable.withDateTime(start),
+            Variable.withDateTime(endExclusive),
+          ],
+          readsFrom: {_db.transactions, _db.categories},
+        )
+        .watch()
+        .map((rows) {
+          var grandTotal = 0;
+          final items = <CategorySpending>[];
+          for (final row in rows) {
+            final categoryId = row.read<int>('category_id');
+            final name = row.read<String>('category_name');
+            final icon = row.read<String>('category_icon');
+            final colorValue = row.read<int>('category_color_value');
+            final type = row.read<String>('category_type');
+            final amount = row.read<int>('total_cents');
+            final count = row.read<int>('tx_count');
+
+            final signedAmount = (type == 'expense' && mode == ReportMode.net)
+                ? -amount
+                : amount;
+            grandTotal += amount.abs();
+            items.add(
+              CategorySpending(
+                categoryId: categoryId,
+                name: name,
+                icon: icon,
+                colorValue: colorValue,
+                totalCents: signedAmount,
+                share: 0,
+                count: count,
+              ),
+            );
+          }
+
+          items.sort((a, b) => b.totalCents.abs().compareTo(a.totalCents.abs()));
+
+          return [
+            for (final item in items)
+              CategorySpending(
+                categoryId: item.categoryId,
+                name: item.name,
+                icon: item.icon,
+                colorValue: item.colorValue,
+                totalCents: item.totalCents,
+                share: grandTotal == 0 ? 0 : item.totalCents.abs() / grandTotal,
+                count: item.count,
+              ),
+          ];
+        });
   }
 
   /// Totals grouped by `#tag` parsed out of each matching transaction's
@@ -170,8 +245,23 @@ class ReportsRepository {
   /// Number of transactions in `[start, endExclusive)`, regardless of
   /// category type (income, expense, or any other).
   Stream<int> watchTransactionCount(DateTime start, DateTime endExclusive) {
-    return _watchRows(start, endExclusive, ReportMode.net)
-        .map((rows) => rows.length);
+    const sql = '''
+      SELECT COUNT(*) AS tx_count
+      FROM transactions t
+      WHERE t.date >= ? AND t.date < ?
+    ''';
+
+    return _db
+        .customSelect(
+          sql,
+          variables: [
+            Variable.withDateTime(start),
+            Variable.withDateTime(endExclusive),
+          ],
+          readsFrom: {_db.transactions},
+        )
+        .watchSingle()
+        .map((row) => row.read<int>('tx_count'));
   }
 
   /// Total per calendar month for the `monthsCount` months ending at

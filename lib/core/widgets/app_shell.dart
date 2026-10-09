@@ -57,11 +57,13 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: child,
-      bottomNavigationBar: FloatingNavBar(
-        items: [for (final tab in _tabs) tab.item],
-        currentIndex: currentIndex,
-        onItemSelected: (index) => context.go(_tabs[index].path),
-        onCenterActionPressed: () => context.push('/transactions/add'),
+      bottomNavigationBar: RepaintBoundary(
+        child: FloatingNavBar(
+          items: [for (final tab in _tabs) tab.item],
+          currentIndex: currentIndex,
+          onItemSelected: (index) => context.go(_tabs[index].path),
+          onCenterActionPressed: () => context.push('/transactions/add'),
+        ),
       ),
     );
   }

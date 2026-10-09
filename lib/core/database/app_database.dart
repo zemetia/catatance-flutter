@@ -18,6 +18,7 @@ import 'tables/installments_table.dart';
 import 'tables/savings_goals_table.dart';
 import 'tables/split_bills_table.dart';
 import 'tables/transactions_table.dart';
+import 'tables/wishlist_items_table.dart';
 
 part 'app_database.g.dart';
 
@@ -36,6 +37,7 @@ part 'app_database.g.dart';
     BankNotificationMappings,
     CapturedBankNotifications,
     EarnedBadges,
+    WishlistItems,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -47,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
   static const fileBaseName = 'pencatatan_keuangan';
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -203,9 +205,51 @@ class AppDatabase extends _$AppDatabase {
         // personal/business flag, they're just distinguished by name/icon).
         await addBusinessExpenseCategoriesV16(this);
       }
+      if (from < 17) {
+        // Kategori pengeluaran baru: Bisnis, Jajan, AI
+        await addExpenseCategoriesV17(this);
+      }
+      if (from < 18) {
+        // Wishlist Anti-Impulsif: cooling-off waiting list to prevent impulse purchases
+        await m.createTable(wishlistItems);
+        await seedWishlistV18(this);
+      }
     },
     beforeOpen: (OpeningDetails details) async {
       await customStatement('PRAGMA foreign_keys = ON;');
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_transactions_account_id ON transactions(account_id);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_transactions_category_id ON transactions(category_id);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_at);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_debt_payments_debt_id ON debt_payments(debt_id);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_installment_payments_installment_id ON installment_payments(installment_id);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_budgets_category_id ON budgets(category_id);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_transactions_date_id ON transactions(date DESC, id DESC);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_transactions_cat_date_amount ON transactions(category_id, date, amount_cents);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_categories_type ON categories(type);',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_wishlist_status ON wishlist_items(status);',
+      );
       final existing = await (select(accounts)..limit(1)).get();
       if (existing.isEmpty) {
         final resetByUser = await const AppMetaStorage().wasDataResetByUser();
@@ -218,7 +262,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Wipes every user-entered record (wallets, transactions, debts,
   /// budgets, savings goals, installments, split bills, bank-notification
-  /// captures/mappings, earned badges) while leaving `Categories` (shared
+  /// captures/mappings, earned badges, wishlist items) while leaving `Categories` (shared
   /// reference data the app needs to keep functioning) untouched. The
   /// user's name/profile isn't stored in this database at all (see
   /// `userProfileProvider`), so there's nothing to preserve there.
@@ -237,6 +281,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(splitBills).go();
       await delete(budgets).go();
       await delete(savingsGoals).go();
+      await delete(wishlistItems).go();
       await delete(earnedBadges).go();
       await delete(transactions).go();
       await delete(accounts).go();
@@ -268,6 +313,9 @@ QueryExecutor _openConnection() {
         db.execute('PRAGMA journal_mode = WAL;');
         db.execute('PRAGMA synchronous = NORMAL;');
         db.execute('PRAGMA busy_timeout = 5000;');
+        db.execute('PRAGMA cache_size = -8000;');
+        db.execute('PRAGMA temp_store = MEMORY;');
+        db.execute('PRAGMA mmap_size = 30000000;');
       },
     ),
   );

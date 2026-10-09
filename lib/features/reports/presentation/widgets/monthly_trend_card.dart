@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -18,6 +17,7 @@ class MonthlyTrendCard extends ConsumerWidget {
   const MonthlyTrendCard({super.key});
 
   static const _chartHeight = 170.0;
+  static final _monthAbbrFormatter = DateFormat('MMM', 'id_ID');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +27,7 @@ class MonthlyTrendCard extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return AppCard(
-      delay: 160.ms,
+      enableAnimation: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -39,7 +39,7 @@ class MonthlyTrendCard extends ConsumerWidget {
               data: [
                 for (final month in months)
                   ReportBarDatum(
-                    axisLabel: DateFormat('MMM', 'id_ID').format(month.month),
+                    axisLabel: _monthAbbrFormatter.format(month.month),
                     value: month.totalCents,
                     color: mode == ReportMode.net
                         ? (month.totalCents < 0 ? AppColors.expense : AppColors.income)

@@ -48,16 +48,32 @@ class BankNotificationSettingsScreen extends ConsumerWidget {
         ),
         children: [
           statusAsync.when(
-            data: (enabled) => _StatusCard(
-              enabled: enabled,
-              onActivate: () =>
-                  ref.read(bankNotificationBridgeProvider).openListenerSettings(),
+            data: (enabled) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _StatusCard(
+                  enabled: enabled,
+                  onActivate: () =>
+                      ref.read(bankNotificationBridgeProvider).openListenerSettings(),
+                ),
+                if (!enabled) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  _RestrictedSettingsTipCard(),
+                ],
+              ],
             ),
             loading: () => _StatusCard(enabled: null, onActivate: () {}),
-            error: (_, _) => _StatusCard(
-              enabled: false,
-              onActivate: () =>
-                  ref.read(bankNotificationBridgeProvider).openListenerSettings(),
+            error: (_, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _StatusCard(
+                  enabled: false,
+                  onActivate: () =>
+                      ref.read(bankNotificationBridgeProvider).openListenerSettings(),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _RestrictedSettingsTipCard(),
+              ],
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -128,6 +144,8 @@ class BankNotificationSettingsScreen extends ConsumerWidget {
               child: Text('Gagal memuat pemetaan: $err'),
             ),
           ),
+          const SizedBox(height: AppSpacing.xl),
+          _SimulationSection(accounts: accounts),
         ],
       ),
     );
@@ -290,3 +308,193 @@ class _MappingCard extends StatelessWidget {
     );
   }
 }
+
+class _RestrictedSettingsTipCard extends StatelessWidget {
+  const _RestrictedSettingsTipCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(LucideIcons.info, size: 18, color: scheme.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tombol abu-abu di Android 13+?',
+                  style: textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Jika Android memblokir izin ("Setelan dibatasi"): buka Pengaturan HP > Aplikasi > Catatance > tekan titik tiga (⋮) di pojok kanan atas > pilih "Izinkan setelan dibatasi".',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: scheme.outline,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SimulationSection extends ConsumerWidget {
+  const _SimulationSection({required this.accounts});
+
+  final List<Account> accounts;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(LucideIcons.flask_conical, size: 18, color: scheme.primary),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              'Uji Coba Sistem Notifikasi',
+              style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Simulasikan notifikasi bank untuk memastikan pendeteksian nominal, arah, dan pemetaan dompet bekerja dengan akurat tanpa harus transfer beneran.',
+          style: textTheme.bodySmall?.copyWith(color: scheme.outline),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Pilih preset simulasi:',
+                style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  ActionChip(
+                    avatar: const Icon(LucideIcons.landmark, size: 14),
+                    label: const Text('BCA mobile (Transfer Rp 50.000)'),
+                    onPressed: () => _simulate(
+                      context,
+                      ref,
+                      packageName: 'com.bca',
+                      appLabel: 'BCA mobile',
+                      title: 'm-Transfer',
+                      content: 'm-Transfer: BERHASIL ke 1234567890 sebesar Rp 50.000,00',
+                    ),
+                  ),
+                  ActionChip(
+                    avatar: const Icon(LucideIcons.smartphone, size: 14),
+                    label: const Text('blu by BCA Digital (Rp 50.000)'),
+                    onPressed: () => _simulate(
+                      context,
+                      ref,
+                      packageName: 'id.co.bcadigital.blu',
+                      appLabel: 'blu by BCA Digital',
+                      title: 'Transfer Berhasil',
+                      content: 'Transfer berhasil! Kamu telah mengirimkan Rp50.000 ke Budi Santoso',
+                    ),
+                  ),
+                  ActionChip(
+                    avatar: const Icon(LucideIcons.landmark, size: 14),
+                    label: const Text('myBCA (Rp 100.000)'),
+                    onPressed: () => _simulate(
+                      context,
+                      ref,
+                      packageName: 'com.bca.mybca',
+                      appLabel: 'myBCA',
+                      title: 'myBCA',
+                      content: 'Transfer ke Rekening 888888 sebesar Rp 100.000 berhasil',
+                    ),
+                  ),
+                  ActionChip(
+                    avatar: const Icon(LucideIcons.arrow_down_left, size: 14),
+                    label: const Text('Transfer Masuk (Rp 250.000)'),
+                    onPressed: () => _simulate(
+                      context,
+                      ref,
+                      packageName: 'com.bca',
+                      appLabel: 'BCA mobile',
+                      title: 'Dana Masuk',
+                      content: 'Ada transfer masuk sebesar Rp 250.000 dari PT Maju Mundur',
+                    ),
+                  ),
+                  ActionChip(
+                    avatar: const Icon(LucideIcons.qr_code, size: 14),
+                    label: const Text('QRIS (Rp 25.000)'),
+                    onPressed: () => _simulate(
+                      context,
+                      ref,
+                      packageName: 'id.co.bcadigital.blu',
+                      appLabel: 'blu by BCA Digital',
+                      title: 'bluPay QRIS',
+                      content: 'Transaksi QRIS berhasil! Pembayaran sebesar Rp 25.000 di Kopi Kenangan',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _simulate(
+    BuildContext context,
+    WidgetRef ref, {
+    required String packageName,
+    required String appLabel,
+    String? title,
+    required String content,
+  }) async {
+    final repo = ref.read(bankNotificationRepositoryProvider);
+    await repo.simulateNotification(
+      packageName: packageName,
+      appLabel: appLabel,
+      title: title,
+      content: content,
+    );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Notifikasi simulasi $appLabel berhasil ditangkap!'),
+          action: SnackBarAction(
+            label: 'Tinjau',
+            onPressed: () => context.push('/bank-notifications/review'),
+          ),
+        ),
+      );
+    }
+  }
+}
+

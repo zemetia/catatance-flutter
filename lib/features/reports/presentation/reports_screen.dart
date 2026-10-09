@@ -59,7 +59,7 @@ class ReportsScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
+        child: SmoothListView(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
             AppSpacing.md,

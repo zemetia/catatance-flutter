@@ -15,13 +15,15 @@ import 'report_shimmer_box.dart';
 class CashflowDayDetail extends ConsumerWidget {
   const CashflowDayDetail({super.key});
 
+  static final _dayDateFormatter = DateFormat('EEEE, d MMMM y', 'id_ID');
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDate = ref.watch(kalenderSelectedDateProvider);
     final transactions = ref.watch(kalenderSelectedDateTransactionsProvider);
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final formattedDate = DateFormat('EEEE, d MMMM y', 'id_ID').format(selectedDate);
+    final formattedDate = _dayDateFormatter.format(selectedDate);
 
     return AppCard(
       child: Column(
@@ -72,6 +74,8 @@ class _CashflowTransactionRow extends StatelessWidget {
 
   final CashflowTransaction item;
 
+  static final _timeFormatter = DateFormat('HH:mm', 'id_ID');
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -80,7 +84,7 @@ class _CashflowTransactionRow extends StatelessWidget {
     final amountColor = item.isTransfer
         ? scheme.outline
         : (item.isIncome ? AppColors.income : scheme.onSurface);
-    final formattedTime = DateFormat('HH:mm', 'id_ID').format(item.date);
+    final formattedTime = _timeFormatter.format(item.date);
 
     return Row(
       children: [

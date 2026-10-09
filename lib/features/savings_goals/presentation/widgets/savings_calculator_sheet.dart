@@ -3,7 +3,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
@@ -44,7 +43,7 @@ class SavingsCalculatorSheet extends HookConsumerWidget {
     final calculatedTargetDate = DateTime.now().add(Duration(days: months * 30));
 
     void setAmountPreset(int val) {
-      targetAmountController.text = NumberFormat('#,###', 'id_ID').format(val);
+      targetAmountController.text = formatNumberGrouped(val);
     }
 
     return Container(
@@ -150,8 +149,7 @@ class SavingsCalculatorSheet extends HookConsumerWidget {
             onChanged: (val) {
               final digits = val.replaceAll(RegExp(r'[^\d]'), '');
               if (digits.isNotEmpty) {
-                final formatted =
-                    NumberFormat('#,###', 'id_ID').format(int.parse(digits));
+                final formatted = formatNumberGrouped(int.parse(digits));
                 if (formatted != val) {
                   targetAmountController.value = TextEditingValue(
                     text: formatted,

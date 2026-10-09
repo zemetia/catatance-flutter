@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/constants/currencies.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -90,7 +89,17 @@ class _BatchDraftFormSheet extends HookConsumerWidget {
     );
 
     final currentCategories = useMemoized(
-      () => allCategories.where((c) => isExpense.value ? !c.isIncome : c.isIncome).toList(),
+      () {
+        final list = allCategories
+            .where((c) => isExpense.value ? !c.isIncome : c.isIncome)
+            .toList();
+        list.sort((a, b) {
+          final cmp = b.usageCount.compareTo(a.usageCount);
+          if (cmp != 0) return cmp;
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+        return list;
+      },
       [allCategories, isExpense.value],
     );
 
@@ -155,8 +164,8 @@ class _BatchDraftFormSheet extends HookConsumerWidget {
         selectedDate.value.month == now.month &&
         selectedDate.value.day == now.day;
     final dateLabel = isToday
-        ? 'Hari ini, ${DateFormat('d MMM', 'id_ID').format(selectedDate.value)}'
-        : DateFormat('d MMM yyyy', 'id_ID').format(selectedDate.value);
+        ? 'Hari ini, ${formatDateShort(selectedDate.value)}'
+        : formatDateMedium(selectedDate.value);
 
     final canSave = amount > 0 && selectedAccount != null && selectedCategory.value != null;
 
@@ -282,7 +291,13 @@ class _BatchDraftFormSheet extends HookConsumerWidget {
                     size: 16,
                     color: selectedCategory.value?.color,
                   ),
-                  label: Text(selectedCategory.value?.name ?? 'Pilih Kategori'),
+                  label: Text(
+                    selectedCategory.value != null
+                        ? (selectedCategory.value!.usageCount > 0
+                            ? '${selectedCategory.value!.name} (${selectedCategory.value!.usageCount}x)'
+                            : selectedCategory.value!.name)
+                        : 'Pilih Kategori',
+                  ),
                   backgroundColor: scheme.surfaceContainerHigh,
                   onPressed: pickCategory,
                 ),

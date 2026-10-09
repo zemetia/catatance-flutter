@@ -544,6 +544,11 @@ Future<void> seedInitialData(AppDatabase db) async {
       await db.into(db.categories).insert(c.toCompanion());
     }
 
+    // Categories - Expense (Bisnis, Jajan, AI)
+    for (final c in expenseCategoriesV17) {
+      await db.into(db.categories).insert(c.toCompanion());
+    }
+
     // Categories - Income
     final catGaji = await db
         .into(db.categories)
@@ -1325,7 +1330,110 @@ Future<void> seedInitialData(AppDatabase db) async {
             note: const Value('Penyangga 6 bulan biaya hidup untuk keamanan finansial'),
           ),
         );
+
+    // 6. Wishlist Anti-Impulsif
+    final wishNow = DateTime.now();
+    await db.into(db.wishlistItems).insert(
+          WishlistItemsCompanion.insert(
+            name: 'Mechanical Keyboard Custom',
+            estimatedPriceCents: 1650000,
+            reason: const Value('Pengen setup meja lebih estetik dan enak buat ngetik seharian'),
+            coolingDays: const Value(30),
+            createdAt: Value(wishNow.subtract(const Duration(days: 12))),
+            readyAt: wishNow.add(const Duration(days: 18)),
+            status: const Value('cooling_off'),
+            priority: const Value('medium'),
+            iconKey: const Value('laptop'),
+          ),
+        );
+
+    await db.into(db.wishlistItems).insert(
+          WishlistItemsCompanion.insert(
+            name: 'Smartwatch Fitness Pro',
+            estimatedPriceCents: 2450000,
+            reason: const Value('Biar rajin olahraga lari pagi dan tracking detak jantung'),
+            coolingDays: const Value(30),
+            createdAt: Value(wishNow.subtract(const Duration(days: 31))),
+            readyAt: wishNow.subtract(const Duration(days: 1)),
+            status: const Value('ready'),
+            priority: const Value('high'),
+            iconKey: const Value('watch'),
+          ),
+        );
+
+    await db.into(db.wishlistItems).insert(
+          WishlistItemsCompanion.insert(
+            name: 'Sneakers Hypebeast Limited',
+            estimatedPriceCents: 1850000,
+            reason: const Value('Lagi tren dan kena FOMO pas promo midnight sale'),
+            coolingDays: const Value(30),
+            createdAt: Value(wishNow.subtract(const Duration(days: 45))),
+            readyAt: wishNow.subtract(const Duration(days: 15)),
+            status: const Value('cancelled'),
+            decisionDate: Value(wishNow.subtract(const Duration(days: 14))),
+            decisionNote: const Value(
+              'Setelah 30 hari sadar masih punya sepatu yang bagus. Berhasil hemat!',
+            ),
+            priority: const Value('low'),
+            iconKey: const Value('shopping-bag'),
+            savedAmountCents: const Value(1850000),
+          ),
+        );
   });
+}
+
+/// Schema v18: seeds sample wishlist items for existing installs
+Future<void> seedWishlistV18(AppDatabase db) async {
+  final wishNow = DateTime.now();
+  final existing = await (db.select(db.wishlistItems)..limit(1)).get();
+  if (existing.isNotEmpty) return;
+
+  await db.into(db.wishlistItems).insert(
+        WishlistItemsCompanion.insert(
+          name: 'Mechanical Keyboard Custom',
+          estimatedPriceCents: 1650000,
+          reason: const Value('Pengen setup meja lebih estetik dan enak buat ngetik seharian'),
+          coolingDays: const Value(30),
+          createdAt: Value(wishNow.subtract(const Duration(days: 12))),
+          readyAt: wishNow.add(const Duration(days: 18)),
+          status: const Value('cooling_off'),
+          priority: const Value('medium'),
+          iconKey: const Value('laptop'),
+        ),
+      );
+
+  await db.into(db.wishlistItems).insert(
+        WishlistItemsCompanion.insert(
+          name: 'Smartwatch Fitness Pro',
+          estimatedPriceCents: 2450000,
+          reason: const Value('Biar rajin olahraga lari pagi dan tracking detak jantung'),
+          coolingDays: const Value(30),
+          createdAt: Value(wishNow.subtract(const Duration(days: 31))),
+          readyAt: wishNow.subtract(const Duration(days: 1)),
+          status: const Value('ready'),
+          priority: const Value('high'),
+          iconKey: const Value('watch'),
+        ),
+      );
+
+  await db.into(db.wishlistItems).insert(
+        WishlistItemsCompanion.insert(
+          name: 'Sneakers Hypebeast Limited',
+          estimatedPriceCents: 1850000,
+          reason: const Value('Lagi tren dan kena FOMO pas promo midnight sale'),
+          coolingDays: const Value(30),
+          createdAt: Value(wishNow.subtract(const Duration(days: 45))),
+          readyAt: wishNow.subtract(const Duration(days: 15)),
+          status: const Value('cancelled'),
+          decisionDate: Value(wishNow.subtract(const Duration(days: 14))),
+          decisionNote: const Value(
+            'Setelah 30 hari sadar masih punya sepatu yang bagus. Berhasil hemat!',
+          ),
+          priority: const Value('low'),
+          iconKey: const Value('shopping-bag'),
+          savedAmountCents: const Value(1850000),
+        ),
+      );
 }
 
 /// Schema v13: expands the income/expense category set to the granular list
@@ -1463,3 +1571,24 @@ Future<void> addBusinessExpenseCategoriesV16(AppDatabase db) async {
     await db.into(db.categories).insert(c.toCompanion());
   }
 }
+
+/// Kategori pengeluaran baru: Bisnis, Jajan, AI.
+const expenseCategoriesV17 = <_SeedCategory>[
+  _SeedCategory('Bisnis', 'briefcase-business', 0xFF1C7ED6),
+  _SeedCategory('Jajan', 'cookie', 0xFFFF922B),
+  _SeedCategory('AI', 'bot', 0xFF7048E8),
+];
+
+/// Schema v17: adds [expenseCategoriesV17] for existing installs
+/// (fresh installs already get them via [seedInitialData]).
+Future<void> addExpenseCategoriesV17(AppDatabase db) async {
+  for (final c in expenseCategoriesV17) {
+    final existing = await (db.select(db.categories)
+          ..where((tbl) => tbl.name.equals(c.name) & tbl.type.equals('expense')))
+        .get();
+    if (existing.isEmpty) {
+      await db.into(db.categories).insert(c.toCompanion());
+    }
+  }
+}
+

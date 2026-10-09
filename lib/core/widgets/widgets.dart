@@ -12,3 +12,4 @@ export 'pin_pad/pin_entry_step.dart';
 export 'pin_pad/pin_pad.dart';
 export 'stat_card.dart';
 export 'suggestion_card.dart';
+export 'smooth_scroll/smooth_scroll.dart';

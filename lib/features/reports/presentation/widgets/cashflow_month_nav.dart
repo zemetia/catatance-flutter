@@ -19,11 +19,13 @@ class CashflowMonthNav extends StatelessWidget {
   final VoidCallback onPrevious;
   final VoidCallback onNext;
 
+  static final _monthFormatter = DateFormat('MMM y', 'id_ID');
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final label = DateFormat('MMM y', 'id_ID').format(month);
+    final label = _monthFormatter.format(month);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
