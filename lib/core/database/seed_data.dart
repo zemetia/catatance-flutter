@@ -550,6 +550,16 @@ Future<void> seedInitialData(AppDatabase db) async {
     }
 
     // Categories - Income
+    await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: 'Reimburse',
+            icon: 'receipt',
+            type: 'income',
+            colorValue: 0xFF12B886,
+          ),
+        );
     final catGaji = await db
         .into(db.categories)
         .insert(
@@ -1589,6 +1599,24 @@ Future<void> addExpenseCategoriesV17(AppDatabase db) async {
     if (existing.isEmpty) {
       await db.into(db.categories).insert(c.toCompanion());
     }
+  }
+}
+
+/// Schema v20: adds 'Reimburse' income category for existing installs
+/// (fresh installs already get it via [seedInitialData]).
+Future<void> addReimburseCategoryV20(AppDatabase db) async {
+  final existing = await (db.select(db.categories)
+        ..where((tbl) => tbl.name.equals('Reimburse') & tbl.type.equals('income')))
+      .get();
+  if (existing.isEmpty) {
+    await db.into(db.categories).insert(
+          CategoriesCompanion.insert(
+            name: 'Reimburse',
+            icon: 'receipt',
+            type: 'income',
+            colorValue: 0xFF12B886,
+          ),
+        );
   }
 }
 

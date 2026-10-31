@@ -49,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
   static const fileBaseName = 'pencatatan_keuangan';
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -218,6 +218,10 @@ class AppDatabase extends _$AppDatabase {
         // Transactions remember the savings goal an income was earmarked
         // for, so editing/deleting that income can reverse the goal too.
         await m.addColumn(transactions, transactions.savingsGoalId);
+      }
+      if (from < 20) {
+        // Kategori pemasukan baru: Reimburse
+        await addReimburseCategoryV20(this);
       }
     },
     beforeOpen: (OpeningDetails details) async {

@@ -129,11 +129,11 @@ class AddTransactionScreen extends HookConsumerWidget {
       text: formatCurrencyInput(0, currency: currentCurrency),
     );
 
-    // Filter categories based on expense / income and auto-sort by usageCount DESC
+    // Filter categories based on expense / income, excluding transfer, and auto-sort by usageCount DESC
     final currentCategories = useMemoized(
       () {
         final list = allCategories
-            .where((c) => isExpense.value ? !c.isIncome : c.isIncome)
+            .where((c) => !c.isTransfer && (isExpense.value ? c.isExpense : c.isIncome))
             .toList();
         list.sort((a, b) {
           final cmp = b.usageCount.compareTo(a.usageCount);
@@ -302,7 +302,10 @@ class AddTransactionScreen extends HookConsumerWidget {
         }
         if (result.suggestedCategoryName != null) {
           final matched = allCategories.where(
-            (c) => c.name.toLowerCase() == result.suggestedCategoryName!.toLowerCase(),
+            (c) =>
+                !c.isTransfer &&
+                c.name.toLowerCase() ==
+                    result.suggestedCategoryName!.toLowerCase(),
           ).firstOrNull;
           if (matched != null) {
             isExpense.value = !matched.isIncome;

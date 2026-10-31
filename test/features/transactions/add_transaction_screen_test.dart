@@ -138,6 +138,35 @@ void main() {
     await disposeTester(tester);
   });
 
+  testWidgets('AddTransactionScreen excludes Transfer category and includes Reimburse in Pemasukan',
+      (tester) async {
+    setupViewport(tester);
+    await tester.pumpWidget(buildTestableScreen());
+    await tester.pumpAndSettle();
+
+    // In Pengeluaran mode: Transfer should not be present in quick chips
+    expect(find.widgetWithText(ActionChip, 'Transfer'), findsNothing);
+
+    // Switch to Pemasukan
+    await tester.tap(find.text('Pemasukan'));
+    await tester.pumpAndSettle();
+
+    // In Pemasukan mode: Transfer should not be present in quick chips
+    expect(find.widgetWithText(ActionChip, 'Transfer'), findsNothing);
+
+    // Open category picker
+    await tester.tap(find.text('Kategori').first);
+    await tester.pumpAndSettle();
+
+    // Verify Reimburse is present in the category picker sheet
+    expect(find.text('Reimburse'), findsOneWidget);
+
+    // Verify Transfer is not present in the category picker sheet
+    expect(find.text('Transfer'), findsNothing);
+
+    await disposeTester(tester);
+  });
+
   testWidgets('BudgetInfoCard shows active budgeting status for budgeted category',
       (tester) async {
     setupViewport(tester);

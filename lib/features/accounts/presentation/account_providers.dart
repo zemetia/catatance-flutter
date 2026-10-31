@@ -37,6 +37,7 @@ class WalletActionNotifier extends AsyncNotifier<void> {
     required int convertedAmountCents,
     int feeCents = 0,
     int? feeCategoryId,
+    DateTime? date,
   }) async {
     state = const AsyncLoading();
     final repo = ref.read(accountRepositoryProvider);
@@ -48,6 +49,7 @@ class WalletActionNotifier extends AsyncNotifier<void> {
         convertedAmountCents: convertedAmountCents,
         feeCents: feeCents,
         feeCategoryId: feeCategoryId,
+        date: date,
       ),
     );
   }

@@ -40,6 +40,26 @@ void main() {
     expect(names, contains('AI'));
   });
 
+  test('CategoryRepository includes Reimburse income category', () async {
+    final incomes = await repository.watchByType('income').first;
+    final names = incomes.map((c) => c.name).toSet();
+
+    expect(names, contains('Reimburse'));
+    final reimburse = incomes.firstWhere((c) => c.name == 'Reimburse');
+    expect(reimburse.type, equals('income'));
+    expect(reimburse.icon, equals('receipt'));
+  });
+
+  test('CategoryRepository watchByType excludes Transfer from expense and income', () async {
+    final expenses = await repository.watchByType('expense').first;
+    final incomes = await repository.watchByType('income').first;
+
+    expect(expenses.any((c) => c.name.toLowerCase() == 'transfer'), isFalse);
+    expect(expenses.any((c) => c.type == 'transfer'), isFalse);
+    expect(incomes.any((c) => c.name.toLowerCase() == 'transfer'), isFalse);
+    expect(incomes.any((c) => c.type == 'transfer'), isFalse);
+  });
+
   test('CategoryRepository auto sorts by usageCount DESC and updates reactively', () async {
     final initialExpenses = await repository.watchByType('expense').first;
     expect(initialExpenses, isNotEmpty);

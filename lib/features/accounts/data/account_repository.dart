@@ -103,6 +103,7 @@ class AccountRepository {
     required int convertedAmountCents,
     int feeCents = 0,
     int? feeCategoryId,
+    DateTime? date,
   }) {
     return _db.transaction(() async {
       final from = await (_db.select(
@@ -127,7 +128,7 @@ class AccountRepository {
         ),
       );
 
-      final now = DateTime.now();
+      final txDate = date ?? DateTime.now();
       final transferCategoryId = await _categoryIdByName('Transfer');
 
       await _db.into(_db.transactions).insert(
@@ -139,7 +140,7 @@ class AccountRepository {
               toAmountCents: Value(
                 convertedAmountCents != amountCents ? convertedAmountCents : null,
               ),
-              date: now,
+              date: txDate,
             ),
           );
 
@@ -150,7 +151,7 @@ class AccountRepository {
                 categoryId: feeCategoryId,
                 amountCents: feeCents,
                 note: Value('Biaya admin transfer ke ${to.name}'),
-                date: now,
+                date: txDate,
               ),
             );
       }

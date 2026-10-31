@@ -42,7 +42,9 @@ class CategoryRepository {
         COUNT(t.id) AS usage_count
       FROM categories c
       LEFT JOIN transactions t ON t.category_id = c.id
-      WHERE c.type = ?
+      WHERE c.type = ? 
+        AND c.type NOT IN ('transfer', 'transfer_in', 'transfer_out')
+        AND LOWER(c.name) != 'transfer'
       GROUP BY c.id
       ORDER BY usage_count DESC, c.name COLLATE NOCASE ASC
     ''';
@@ -68,6 +70,8 @@ class CategoryRepository {
       FROM categories c
       LEFT JOIN transactions t ON t.category_id = c.id
       WHERE c.type = ?
+        AND c.type NOT IN ('transfer', 'transfer_in', 'transfer_out')
+        AND LOWER(c.name) != 'transfer'
       GROUP BY c.id
       ORDER BY usage_count DESC, c.name COLLATE NOCASE ASC
     ''';

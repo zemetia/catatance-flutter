@@ -135,7 +135,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wallets/transfer',
         name: 'wallet-transfer',
-        builder: (_, _) => const WalletTransferScreen(),
+        builder: (_, state) => WalletTransferScreen(
+          initialDate: state.extra as DateTime?,
+        ),
       ),
       GoRoute(
         path: '/wallets/:id/edit',

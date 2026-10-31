@@ -21,7 +21,9 @@ import 'widgets/wallet_picker_sheet.dart';
 /// converted using a live exchange rate (Yahoo Finance chart API, the same
 /// source `yfinance` uses) fetched via [exchangeRateProvider].
 class WalletTransferScreen extends HookConsumerWidget {
-  const WalletTransferScreen({super.key});
+  const WalletTransferScreen({this.initialDate, super.key});
+
+  final DateTime? initialDate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,6 +40,64 @@ class WalletTransferScreen extends HookConsumerWidget {
     final feeCents = useState(0);
     final manualRate = useState<double?>(null);
     final actionState = ref.watch(walletActionProvider);
+
+    final selectedDate = useState<DateTime>(() {
+      final now = DateTime.now();
+      if (initialDate == null) return now;
+      return DateTime(
+        initialDate!.year,
+        initialDate!.month,
+        initialDate!.day,
+        now.hour,
+        now.minute,
+        now.second,
+      );
+    }());
+
+    Future<void> pickDate() async {
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate.value,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: scheme.copyWith(primary: scheme.primary),
+            ),
+            child: child!,
+          );
+        },
+      );
+      if (picked != null) {
+        final now = DateTime.now();
+        selectedDate.value = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          selectedDate.value.hour != 0 || selectedDate.value.minute != 0
+              ? selectedDate.value.hour
+              : now.hour,
+          selectedDate.value.hour != 0 || selectedDate.value.minute != 0
+              ? selectedDate.value.minute
+              : now.minute,
+          selectedDate.value.second != 0 ? selectedDate.value.second : now.second,
+        );
+      }
+    }
+
+    final now = DateTime.now();
+    final isToday = selectedDate.value.year == now.year &&
+        selectedDate.value.month == now.month &&
+        selectedDate.value.day == now.day;
+    final isYesterday = selectedDate.value.year == now.year &&
+        selectedDate.value.month == now.month &&
+        selectedDate.value.day == now.day - 1;
+    final dateLabel = isToday
+        ? 'Hari ini (${formatDateShort(selectedDate.value)})'
+        : isYesterday
+            ? 'Kemarin (${formatDateShort(selectedDate.value)})'
+            : formatDateMedium(selectedDate.value);
 
     useEffect(() {
       if (accounts.isNotEmpty && from.value == null && to.value == null) {
@@ -130,6 +190,7 @@ class WalletTransferScreen extends HookConsumerWidget {
         convertedAmountCents: crossCurrency ? convertedAmount : amount,
         feeCents: feeCents.value,
         feeCategoryId: feeCategory?.id,
+        date: selectedDate.value,
       );
       if (context.mounted && ref.read(walletActionProvider).hasError == false) {
         ScaffoldMessenger.of(context)
@@ -354,6 +415,62 @@ class WalletTransferScreen extends HookConsumerWidget {
               ),
             ],
             const SizedBox(height: AppSpacing.lg),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                onTap: pickDate,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                        child: Icon(
+                          LucideIcons.calendar,
+                          color: scheme.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tanggal Transfer',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: scheme.outline,
+                              ),
+                            ),
+                            Text(
+                              dateLabel,
+                              style: textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        LucideIcons.chevron_right,
+                        size: 18,
+                        color: scheme.outline,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'BIAYA ADMIN TRANSFER',
               textAlign: TextAlign.center,
@@ -418,12 +535,16 @@ class WalletTransferScreen extends HookConsumerWidget {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Row(
+                  : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Transfer sekarang'),
-                        SizedBox(width: AppSpacing.xs),
-                        Icon(LucideIcons.arrow_left_right, size: 18),
+                        Text(
+                          isToday
+                              ? 'Transfer sekarang'
+                              : 'Transfer (${formatDateShort(selectedDate.value)})',
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        const Icon(LucideIcons.arrow_left_right, size: 18),
                       ],
                     ),
             ),

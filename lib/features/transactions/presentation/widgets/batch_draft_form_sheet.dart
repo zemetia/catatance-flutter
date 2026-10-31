@@ -91,7 +91,7 @@ class _BatchDraftFormSheet extends HookConsumerWidget {
     final currentCategories = useMemoized(
       () {
         final list = allCategories
-            .where((c) => isExpense.value ? !c.isIncome : c.isIncome)
+            .where((c) => !c.isTransfer && (isExpense.value ? c.isExpense : c.isIncome))
             .toList();
         list.sort((a, b) {
           final cmp = b.usageCount.compareTo(a.usageCount);

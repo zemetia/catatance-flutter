@@ -19,6 +19,12 @@ class CategoryItem {
   final int usageCount;
 
   bool get isIncome => type == 'income';
+  bool get isExpense => type == 'expense';
+  bool get isTransfer =>
+      type == 'transfer' ||
+      type == 'transfer_in' ||
+      type == 'transfer_out' ||
+      name.toLowerCase() == 'transfer';
   Color get color => Color(colorValue);
 
   IconData get iconData => iconFor(icon);
@@ -115,6 +121,7 @@ class CategoryItem {
         'stamp' => LucideIcons.stamp,
         'bot' => LucideIcons.bot,
         'cookie' => LucideIcons.cookie,
+        'receipt' => LucideIcons.receipt,
         _ => LucideIcons.receipt,
       };
 }
