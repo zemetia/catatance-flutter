@@ -390,7 +390,10 @@ class ReportsRepository {
         OrderingTerm.desc(_db.transactions.id),
       ]);
     if (accountId != null) {
-      query.where(_db.transactions.accountId.equals(accountId));
+      query.where(
+        _db.transactions.accountId.equals(accountId) |
+            _db.transactions.toAccountId.equals(accountId),
+      );
     }
 
     return query.watch().map((rows) {
@@ -592,7 +595,10 @@ class ReportsRepository {
       query.where(_db.categories.type.equals('income'));
     }
     if (accountId != null) {
-      query.where(_db.transactions.accountId.equals(accountId));
+      query.where(
+        _db.transactions.accountId.equals(accountId) |
+            _db.transactions.toAccountId.equals(accountId),
+      );
     }
     return query.watch();
   }

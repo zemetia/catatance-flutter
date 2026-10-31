@@ -76,6 +76,16 @@ void main() {
 
     await tester.pumpAndSettle();
 
+    // Verify action buttons
+    expect(
+      find.byTooltip('Transfer antar dompet di tanggal ini'),
+      findsOneWidget,
+    );
+    expect(
+      find.byTooltip('Tambah transaksi di tanggal ini'),
+      findsOneWidget,
+    );
+
     // Verify transaction is rendered in the list
     expect(find.text('Kopi Kenangan Senja'), findsOneWidget);
 
@@ -87,5 +97,46 @@ void main() {
     expect(find.byType(TransactionDetailSheet), findsOneWidget);
     expect(find.text('Ubah Transaksi'), findsOneWidget);
     expect(find.text('Hapus Transaksi'), findsOneWidget);
+  });
+
+  testWidgets('CashflowDayDetail renders transfer transaction row with proper formatting', (tester) async {
+    final transferTx = CashflowTransaction(
+      id: 99,
+      title: 'Transfer dari BCA ke Mandiri',
+      categoryName: 'Transfer',
+      categoryIcon: 'arrow-left-right',
+      categoryColorValue: 0xFF3D7FFF,
+      accountName: 'BCA',
+      amountCents: 500000,
+      date: DateTime(2026, 10, 31, 10, 30),
+      isIncome: false,
+      isTransfer: true,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          transactionRepositoryProvider.overrideWithValue(transactionRepo),
+          kalenderSelectedDateProvider.overrideWith((ref) => DateTime(2026, 10, 31)),
+          kalenderSelectedDateTransactionsProvider.overrideWith(
+            (ref) => Stream.value([transferTx]),
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: CashflowDayDetail(),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Transfer dari BCA ke Mandiri'), findsOneWidget);
+    expect(find.text('Transfer • BCA • 10:30'), findsOneWidget);
+    expect(find.textContaining('⇄ Rp 500.000'), findsOneWidget);
   });
 }

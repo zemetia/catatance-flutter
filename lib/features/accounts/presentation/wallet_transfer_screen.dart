@@ -21,9 +21,14 @@ import 'widgets/wallet_picker_sheet.dart';
 /// converted using a live exchange rate (Yahoo Finance chart API, the same
 /// source `yfinance` uses) fetched via [exchangeRateProvider].
 class WalletTransferScreen extends HookConsumerWidget {
-  const WalletTransferScreen({this.initialDate, super.key});
+  const WalletTransferScreen({
+    this.initialDate,
+    this.initialFromId,
+    super.key,
+  });
 
   final DateTime? initialDate;
+  final int? initialFromId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,6 +40,17 @@ class WalletTransferScreen extends HookConsumerWidget {
         ref.watch(expenseCategoriesProvider).value ?? const <CategoryItem>[];
     final from = useState<Account?>(null);
     final to = useState<Account?>(null);
+
+    useEffect(() {
+      if (from.value == null && initialFromId != null && accounts.isNotEmpty) {
+        final match =
+            accounts.where((a) => a.id == initialFromId).firstOrNull;
+        if (match != null) {
+          from.value = match;
+        }
+      }
+      return null;
+    }, [accounts, initialFromId]);
     final amountDigits = useState('');
     final amountController = useTextEditingController(text: 'Rp 0');
     final feeCents = useState(0);

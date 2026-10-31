@@ -90,6 +90,18 @@ class CashflowDayDetail extends ConsumerWidget {
                 ),
               ),
               IconButton.filledTonal(
+                tooltip: 'Transfer antar dompet di tanggal ini',
+                icon: const Icon(LucideIcons.arrow_left_right),
+                onPressed: () => context.push(
+                  '/wallets/transfer',
+                  extra: {
+                    'date': selectedDate,
+                    'fromId': ref.read(kalenderWalletFilterProvider),
+                  },
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              IconButton.filledTonal(
                 tooltip: 'Tambah transaksi di tanggal ini',
                 icon: const Icon(LucideIcons.plus),
                 onPressed: () => context.push(
@@ -332,9 +344,9 @@ class _CashflowTransactionRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final amountPrefix = item.isTransfer ? '' : (item.isIncome ? '+' : '-');
+    final amountPrefix = item.isTransfer ? '⇄ ' : (item.isIncome ? '+' : '-');
     final amountColor = item.isTransfer
-        ? scheme.outline
+        ? scheme.primary
         : (item.isIncome ? AppColors.income : scheme.onSurface);
     final formattedTime = _timeFormatter.format(item.date);
 
@@ -375,7 +387,7 @@ class _CashflowTransactionRow extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     item.isTransfer
-                        ? formattedTime
+                        ? 'Transfer • ${item.accountName} • $formattedTime'
                         : '${item.categoryName} • ${item.accountName} • $formattedTime',
                     style: textTheme.bodySmall?.copyWith(color: scheme.outline),
                     maxLines: 1,
