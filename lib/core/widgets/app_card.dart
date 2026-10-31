@@ -16,7 +16,7 @@ class AppCard extends StatelessWidget {
     this.border,
     this.backgroundLayers = const [],
     this.delay = Duration.zero,
-    this.enableAnimation = true,
+    this.enableAnimation = false,
     super.key,
   });
 

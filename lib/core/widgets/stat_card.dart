@@ -15,7 +15,7 @@ class StatCard extends StatelessWidget {
     this.color,
     this.delay = Duration.zero,
     this.compact = false,
-    this.enableAnimation = true,
+    this.enableAnimation = false,
     super.key,
   });
 

@@ -29,10 +29,29 @@ class AboutScreen extends StatelessWidget {
                   height: 72,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Icon(LucideIcons.wallet, size: 34, color: scheme.primary),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                    child: Image.asset(
+                      'assets/icons/catatance_logo.png',
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        color: scheme.primary.withValues(alpha: 0.14),
+                        alignment: Alignment.center,
+                        child: Icon(LucideIcons.wallet, size: 34, color: scheme.primary),
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(

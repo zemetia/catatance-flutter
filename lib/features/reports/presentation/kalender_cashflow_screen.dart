@@ -8,6 +8,7 @@ import 'widgets/cashflow_day_detail.dart';
 import 'widgets/cashflow_legend.dart';
 import 'widgets/cashflow_month_nav.dart';
 import 'widgets/cashflow_summary_row.dart';
+import 'widgets/cashflow_wallet_filter.dart';
 
 class KalenderCashflowScreen extends ConsumerWidget {
   const KalenderCashflowScreen({super.key});
@@ -41,6 +42,8 @@ class KalenderCashflowScreen extends ConsumerWidget {
               onPrevious: () => _changeMonth(ref, -1),
               onNext: () => _changeMonth(ref, 1),
             ),
+            const SizedBox(height: AppSpacing.md),
+            const CashflowWalletFilter(),
             const SizedBox(height: AppSpacing.md),
             const CashflowSummaryRow(),
             const SizedBox(height: AppSpacing.md),

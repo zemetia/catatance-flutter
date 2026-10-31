@@ -10,9 +10,9 @@ void main() {
     test('provides custom spring description and velocity bounds', () {
       const physics = SmoothScrollPhysics();
 
-      expect(physics.spring.mass, 75.0);
-      expect(physics.spring.stiffness, 120.0);
-      expect(physics.spring.damping, 1.15);
+      expect(physics.spring.mass, 0.5);
+      expect(physics.spring.stiffness, 100.0);
+      expect(physics.spring.damping, closeTo(17.67, 0.02));
       expect(physics.minFlingVelocity, 40.0);
       expect(physics.maxFlingVelocity, 8000.0);
     });

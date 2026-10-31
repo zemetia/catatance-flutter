@@ -19,9 +19,13 @@ class TransactionItem {
     required this.date,
     required this.createdAt,
     this.toAccountName,
+    this.savingsGoalId,
   });
 
   final int id;
+
+  /// Savings goal this income was earmarked for, if any.
+  final int? savingsGoalId;
   final int accountId;
   final String accountName;
   final String accountCurrencyCode;

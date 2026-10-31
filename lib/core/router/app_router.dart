@@ -36,6 +36,8 @@ import '../../features/profile/presentation/security_screen.dart';
 import '../../features/profile/presentation/widgets/pin_confirm_screen.dart';
 import '../../features/profile/presentation/terms_screen.dart';
 import '../../features/profile/presentation/theme_settings_screen.dart';
+import '../../features/reports/presentation/category_analysis_screen.dart';
+import '../../features/reports/presentation/category_detail_screen.dart';
 import '../../features/reports/presentation/kalender_cashflow_screen.dart';
 import '../../features/reports/presentation/laporan_bulanan_screen.dart';
 import '../../features/reports/presentation/proyeksi_screen.dart';
@@ -46,6 +48,8 @@ import '../../features/savings_goals/presentation/savings_goal_detail_screen.dar
 import '../../features/savings_goals/presentation/savings_goal_form_screen.dart';
 import '../../features/savings_goals/presentation/savings_goal_list_screen.dart';
 import '../../features/split_bills/presentation/split_bill_form_screen.dart';
+import '../../features/transactions/domain/transaction_item.dart';
+import '../../features/transactions/presentation/add_transaction_prefill.dart';
 import '../../features/transactions/presentation/add_transaction_screen.dart';
 import '../../features/transactions/presentation/batch_transaction_screen.dart';
 import '../../features/transactions/presentation/transaction_list_screen.dart';
@@ -90,7 +94,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/transactions/add',
         name: 'transaction-add',
-        builder: (_, _) => const AddTransactionScreen(),
+        builder: (_, state) => AddTransactionScreen(
+          prefill: state.extra as AddTransactionPrefill?,
+        ),
+      ),
+      GoRoute(
+        path: '/transactions/edit',
+        name: 'transaction-edit',
+        builder: (_, state) =>
+            AddTransactionScreen(editing: state.extra as TransactionItem),
       ),
       GoRoute(
         path: '/transactions/batch',
@@ -394,6 +406,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/reports/radar-harga',
         name: 'reports-radar-harga',
         builder: (_, _) => const RadarHargaScreen(),
+      ),
+      GoRoute(
+        path: '/reports/categories',
+        name: 'reports-categories',
+        builder: (_, _) => const CategoryAnalysisScreen(),
+      ),
+      GoRoute(
+        path: '/reports/categories/:id',
+        name: 'reports-category-detail',
+        builder: (_, state) {
+          final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+          return CategoryDetailScreen(categoryId: id);
+        },
       ),
       GoRoute(
         path: '/reports/kalender-cashflow',

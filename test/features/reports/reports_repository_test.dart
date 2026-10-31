@@ -106,4 +106,39 @@ void main() {
     final count = await repository.watchTransactionCount(start, endExclusive).first;
     expect(count, greaterThan(0));
   });
+
+  test('ReportsRepository returns category analysis list with change metrics', () async {
+    final now = DateTime.now();
+    final currentMonth = DateTime(now.year, now.month);
+
+    final items = await repository.watchCategoryAnalysisList(currentMonth).first;
+    expect(items, isNotEmpty);
+    expect(items.first.totalCents, greaterThan(0));
+    expect(items.first.share, greaterThan(0));
+    expect(items.first.count, greaterThan(0));
+  });
+
+  test('ReportsRepository returns comprehensive category flow detail', () async {
+    final now = DateTime.now();
+    final currentMonth = DateTime(now.year, now.month);
+
+    // Get first category with transactions
+    final items = await repository.watchCategoryAnalysisList(currentMonth).first;
+    expect(items, isNotEmpty);
+    final categoryId = items.first.categoryId;
+
+    final detail = await repository
+        .watchCategoryFlowDetail(categoryId: categoryId, month: currentMonth)
+        .first;
+
+    expect(detail, isNotNull);
+    expect(detail!.categoryId, equals(categoryId));
+    expect(detail.categoryName, isNotEmpty);
+    expect(detail.totalCents, greaterThan(0));
+    expect(detail.transactionCount, greaterThan(0));
+    expect(detail.monthlyTrends.length, equals(6));
+    expect(detail.wallets, isNotEmpty);
+    expect(detail.transactions, isNotEmpty);
+    expect(detail.biggestTransaction, isNotNull);
+  });
 }

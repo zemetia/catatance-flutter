@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/security/security_providers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -108,7 +109,10 @@ class _CategoryRow extends StatelessWidget {
         ? (item.totalCents >= 0 ? AppColors.income : AppColors.expense)
         : scheme.primary;
 
-    return Column(
+    return InkWell(
+      onTap: () => context.push('/reports/categories/${item.categoryId}'),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -155,6 +159,7 @@ class _CategoryRow extends StatelessWidget {
                 style: textTheme.bodySmall?.copyWith(color: scheme.outline),
               ),
       ],
-    );
+    ),
+  );
   }
 }

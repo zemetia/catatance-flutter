@@ -962,6 +962,17 @@ class $TransactionsTable extends Transactions
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _savingsGoalIdMeta = const VerificationMeta(
+    'savingsGoalId',
+  );
+  @override
+  late final GeneratedColumn<int> savingsGoalId = GeneratedColumn<int>(
+    'savings_goal_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -973,6 +984,7 @@ class $TransactionsTable extends Transactions
     createdAt,
     toAccountId,
     toAmountCents,
+    savingsGoalId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1054,6 +1066,15 @@ class $TransactionsTable extends Transactions
         ),
       );
     }
+    if (data.containsKey('savings_goal_id')) {
+      context.handle(
+        _savingsGoalIdMeta,
+        savingsGoalId.isAcceptableOrUnknown(
+          data['savings_goal_id']!,
+          _savingsGoalIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1099,6 +1120,10 @@ class $TransactionsTable extends Transactions
         DriftSqlType.int,
         data['${effectivePrefix}to_amount_cents'],
       ),
+      savingsGoalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}savings_goal_id'],
+      ),
     );
   }
 
@@ -1125,6 +1150,12 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   /// differs from [amountCents] (a cross-currency transfer). Null means
   /// "same as amountCents" — most transfers share one currency.
   final int? toAmountCents;
+
+  /// Savings goal an income was earmarked for — lets edit/delete reverse the
+  /// goal's saved amount. Null for everything else (and legacy rows). Not a
+  /// foreign key on purpose: deleting a goal must not be blocked by (or
+  /// cascade into) the income history that fed it.
+  final int? savingsGoalId;
   const Transaction({
     required this.id,
     required this.accountId,
@@ -1135,6 +1166,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     required this.createdAt,
     this.toAccountId,
     this.toAmountCents,
+    this.savingsGoalId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1154,6 +1186,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     if (!nullToAbsent || toAmountCents != null) {
       map['to_amount_cents'] = Variable<int>(toAmountCents);
     }
+    if (!nullToAbsent || savingsGoalId != null) {
+      map['savings_goal_id'] = Variable<int>(savingsGoalId);
+    }
     return map;
   }
 
@@ -1172,6 +1207,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       toAmountCents: toAmountCents == null && nullToAbsent
           ? const Value.absent()
           : Value(toAmountCents),
+      savingsGoalId: savingsGoalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(savingsGoalId),
     );
   }
 
@@ -1190,6 +1228,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       toAccountId: serializer.fromJson<int?>(json['toAccountId']),
       toAmountCents: serializer.fromJson<int?>(json['toAmountCents']),
+      savingsGoalId: serializer.fromJson<int?>(json['savingsGoalId']),
     );
   }
   @override
@@ -1205,6 +1244,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'toAccountId': serializer.toJson<int?>(toAccountId),
       'toAmountCents': serializer.toJson<int?>(toAmountCents),
+      'savingsGoalId': serializer.toJson<int?>(savingsGoalId),
     };
   }
 
@@ -1218,6 +1258,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     DateTime? createdAt,
     Value<int?> toAccountId = const Value.absent(),
     Value<int?> toAmountCents = const Value.absent(),
+    Value<int?> savingsGoalId = const Value.absent(),
   }) => Transaction(
     id: id ?? this.id,
     accountId: accountId ?? this.accountId,
@@ -1230,6 +1271,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     toAmountCents: toAmountCents.present
         ? toAmountCents.value
         : this.toAmountCents,
+    savingsGoalId: savingsGoalId.present
+        ? savingsGoalId.value
+        : this.savingsGoalId,
   );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
@@ -1250,6 +1294,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       toAmountCents: data.toAmountCents.present
           ? data.toAmountCents.value
           : this.toAmountCents,
+      savingsGoalId: data.savingsGoalId.present
+          ? data.savingsGoalId.value
+          : this.savingsGoalId,
     );
   }
 
@@ -1264,7 +1311,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('date: $date, ')
           ..write('createdAt: $createdAt, ')
           ..write('toAccountId: $toAccountId, ')
-          ..write('toAmountCents: $toAmountCents')
+          ..write('toAmountCents: $toAmountCents, ')
+          ..write('savingsGoalId: $savingsGoalId')
           ..write(')'))
         .toString();
   }
@@ -1280,6 +1328,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     createdAt,
     toAccountId,
     toAmountCents,
+    savingsGoalId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1293,7 +1342,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.date == this.date &&
           other.createdAt == this.createdAt &&
           other.toAccountId == this.toAccountId &&
-          other.toAmountCents == this.toAmountCents);
+          other.toAmountCents == this.toAmountCents &&
+          other.savingsGoalId == this.savingsGoalId);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
@@ -1306,6 +1356,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<DateTime> createdAt;
   final Value<int?> toAccountId;
   final Value<int?> toAmountCents;
+  final Value<int?> savingsGoalId;
   const TransactionsCompanion({
     this.id = const Value.absent(),
     this.accountId = const Value.absent(),
@@ -1316,6 +1367,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.createdAt = const Value.absent(),
     this.toAccountId = const Value.absent(),
     this.toAmountCents = const Value.absent(),
+    this.savingsGoalId = const Value.absent(),
   });
   TransactionsCompanion.insert({
     this.id = const Value.absent(),
@@ -1327,6 +1379,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.createdAt = const Value.absent(),
     this.toAccountId = const Value.absent(),
     this.toAmountCents = const Value.absent(),
+    this.savingsGoalId = const Value.absent(),
   }) : accountId = Value(accountId),
        categoryId = Value(categoryId),
        amountCents = Value(amountCents),
@@ -1341,6 +1394,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<DateTime>? createdAt,
     Expression<int>? toAccountId,
     Expression<int>? toAmountCents,
+    Expression<int>? savingsGoalId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1352,6 +1406,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (createdAt != null) 'created_at': createdAt,
       if (toAccountId != null) 'to_account_id': toAccountId,
       if (toAmountCents != null) 'to_amount_cents': toAmountCents,
+      if (savingsGoalId != null) 'savings_goal_id': savingsGoalId,
     });
   }
 
@@ -1365,6 +1420,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<DateTime>? createdAt,
     Value<int?>? toAccountId,
     Value<int?>? toAmountCents,
+    Value<int?>? savingsGoalId,
   }) {
     return TransactionsCompanion(
       id: id ?? this.id,
@@ -1376,6 +1432,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       createdAt: createdAt ?? this.createdAt,
       toAccountId: toAccountId ?? this.toAccountId,
       toAmountCents: toAmountCents ?? this.toAmountCents,
+      savingsGoalId: savingsGoalId ?? this.savingsGoalId,
     );
   }
 
@@ -1409,6 +1466,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (toAmountCents.present) {
       map['to_amount_cents'] = Variable<int>(toAmountCents.value);
     }
+    if (savingsGoalId.present) {
+      map['savings_goal_id'] = Variable<int>(savingsGoalId.value);
+    }
     return map;
   }
 
@@ -1423,7 +1483,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('date: $date, ')
           ..write('createdAt: $createdAt, ')
           ..write('toAccountId: $toAccountId, ')
-          ..write('toAmountCents: $toAmountCents')
+          ..write('toAmountCents: $toAmountCents, ')
+          ..write('savingsGoalId: $savingsGoalId')
           ..write(')'))
         .toString();
   }
@@ -9438,6 +9499,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<int?> toAccountId,
       Value<int?> toAmountCents,
+      Value<int?> savingsGoalId,
     });
 typedef $$TransactionsTableUpdateCompanionBuilder =
     TransactionsCompanion Function({
@@ -9450,6 +9512,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<int?> toAccountId,
       Value<int?> toAmountCents,
+      Value<int?> savingsGoalId,
     });
 
 final class $$TransactionsTableReferences
@@ -9630,6 +9693,11 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<int> get toAmountCents => $composableBuilder(
     column: $table.toAmountCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get savingsGoalId => $composableBuilder(
+    column: $table.savingsGoalId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9844,6 +9912,11 @@ class $$TransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get savingsGoalId => $composableBuilder(
+    column: $table.savingsGoalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$AccountsTableOrderingComposer get accountId {
     final $$AccountsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -9942,6 +10015,11 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<int> get toAmountCents => $composableBuilder(
     column: $table.toAmountCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get savingsGoalId => $composableBuilder(
+    column: $table.savingsGoalId,
     builder: (column) => column,
   );
 
@@ -10163,6 +10241,7 @@ class $$TransactionsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int?> toAccountId = const Value.absent(),
                 Value<int?> toAmountCents = const Value.absent(),
+                Value<int?> savingsGoalId = const Value.absent(),
               }) => TransactionsCompanion(
                 id: id,
                 accountId: accountId,
@@ -10173,6 +10252,7 @@ class $$TransactionsTableTableManager
                 createdAt: createdAt,
                 toAccountId: toAccountId,
                 toAmountCents: toAmountCents,
+                savingsGoalId: savingsGoalId,
               ),
           createCompanionCallback:
               ({
@@ -10185,6 +10265,7 @@ class $$TransactionsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int?> toAccountId = const Value.absent(),
                 Value<int?> toAmountCents = const Value.absent(),
+                Value<int?> savingsGoalId = const Value.absent(),
               }) => TransactionsCompanion.insert(
                 id: id,
                 accountId: accountId,
@@ -10195,6 +10276,7 @@ class $$TransactionsTableTableManager
                 createdAt: createdAt,
                 toAccountId: toAccountId,
                 toAmountCents: toAmountCents,
+                savingsGoalId: savingsGoalId,
               ),
           withReferenceMapper: (p0) => p0
               .map(

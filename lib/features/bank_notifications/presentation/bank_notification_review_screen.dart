@@ -192,6 +192,7 @@ class _ConfirmSheetBodyState extends ConsumerState<_ConfirmSheetBody> {
               value: _category?.name ?? 'Pilih kategori',
               icon: LucideIcons.tag,
               onTap: () async {
+                FocusScope.of(context).unfocus();
                 final picked = await showCategoryPickerSheet(
                   context,
                   categories: categories,

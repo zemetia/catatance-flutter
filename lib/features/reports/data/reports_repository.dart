@@ -58,6 +58,7 @@ class ReportsRepository {
     DateTime start,
     DateTime endExclusive, {
     ReportMode mode = ReportMode.expense,
+    int? accountId,
   }) {
     final String selectExpr;
     final String modeFilter;
@@ -80,6 +81,7 @@ class ReportsRepository {
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
       WHERE t.date >= ? AND t.date < ? $modeFilter
+      ${accountId != null ? 'AND t.account_id = ?' : ''}
     ''';
 
     return _db
@@ -88,6 +90,7 @@ class ReportsRepository {
           variables: [
             Variable.withDateTime(start),
             Variable.withDateTime(endExclusive),
+            if (accountId != null) Variable.withInt(accountId),
           ],
           readsFrom: {_db.transactions, _db.categories},
         )
@@ -96,13 +99,31 @@ class ReportsRepository {
   }
 
   /// Total expense in `[start, endExclusive)`.
-  Stream<int> watchTotalExpense(DateTime start, DateTime endExclusive) {
-    return watchTotal(start, endExclusive, mode: ReportMode.expense);
+  Stream<int> watchTotalExpense(
+    DateTime start,
+    DateTime endExclusive, {
+    int? accountId,
+  }) {
+    return watchTotal(
+      start,
+      endExclusive,
+      mode: ReportMode.expense,
+      accountId: accountId,
+    );
   }
 
   /// Total income in `[start, endExclusive)`.
-  Stream<int> watchTotalIncome(DateTime start, DateTime endExclusive) {
-    return watchTotal(start, endExclusive, mode: ReportMode.income);
+  Stream<int> watchTotalIncome(
+    DateTime start,
+    DateTime endExclusive, {
+    int? accountId,
+  }) {
+    return watchTotal(
+      start,
+      endExclusive,
+      mode: ReportMode.income,
+      accountId: accountId,
+    );
   }
 
   /// Totals grouped by category in `[start, endExclusive)`, sorted by
@@ -307,9 +328,12 @@ class ReportsRepository {
   /// backs the "Kalender Cashflow" calendar grid.
   Stream<List<DailyCashflow>> watchDailyCashflow(
     DateTime start,
-    DateTime endExclusive,
-  ) {
-    return _watchRows(start, endExclusive, ReportMode.net).map((rows) {
+    DateTime endExclusive, {
+    int? accountId,
+  }) {
+    return _watchRows(start, endExclusive, ReportMode.net,
+            accountId: accountId)
+        .map((rows) {
       final income = <DateTime, int>{};
       final expense = <DateTime, int>{};
       for (final row in rows) {
@@ -336,7 +360,10 @@ class ReportsRepository {
 
   /// Every transaction on a single calendar [day], newest first — backs the
   /// "Kalender Cashflow" screen's selected-day detail list.
-  Stream<List<CashflowTransaction>> watchTransactionsForDate(DateTime day) {
+  Stream<List<CashflowTransaction>> watchTransactionsForDate(
+    DateTime day, {
+    int? accountId,
+  }) {
     final start = DateTime(day.year, day.month, day.day);
     final endExclusive = start.add(const Duration(days: 1));
     final toAccount = _db.accounts.createAlias('to_account');
@@ -362,6 +389,9 @@ class ReportsRepository {
         OrderingTerm.desc(_db.transactions.date),
         OrderingTerm.desc(_db.transactions.id),
       ]);
+    if (accountId != null) {
+      query.where(_db.transactions.accountId.equals(accountId));
+    }
 
     return query.watch().map((rows) {
       return rows.map((row) {
@@ -543,8 +573,9 @@ class ReportsRepository {
   Stream<List<TypedResult>> _watchRows(
     DateTime start,
     DateTime endExclusive,
-    ReportMode mode,
-  ) {
+    ReportMode mode, {
+    int? accountId,
+  }) {
     final query = _db.select(_db.transactions).join([
       innerJoin(
         _db.categories,
@@ -560,6 +591,359 @@ class ReportsRepository {
     } else if (mode == ReportMode.income) {
       query.where(_db.categories.type.equals('income'));
     }
+    if (accountId != null) {
+      query.where(_db.transactions.accountId.equals(accountId));
+    }
     return query.watch();
+  }
+
+  /// Category comparison and flow analysis overview for the selected [month].
+  /// Computes each category's total, count, previous month's total, and budget.
+  Stream<List<CategoryAnalysisItem>> watchCategoryAnalysisList(
+    DateTime month, {
+    ReportMode mode = ReportMode.expense,
+  }) {
+    final start = DateTime(month.year, month.month, 1);
+    final endExclusive = DateTime(month.year, month.month + 1, 1);
+    final prevStart = DateTime(month.year, month.month - 1, 1);
+    final prevEndExclusive = start;
+
+    final String modeFilter;
+    switch (mode) {
+      case ReportMode.expense:
+        modeFilter = "WHERE c.type = 'expense'";
+      case ReportMode.income:
+        modeFilter = "WHERE c.type = 'income'";
+      case ReportMode.net:
+        modeFilter = "WHERE c.type IN ('expense', 'income')";
+    }
+
+    final sql = '''
+      SELECT 
+        c.id AS category_id,
+        c.name AS category_name,
+        c.icon AS category_icon,
+        c.color_value AS category_color_value,
+        c.type AS category_type,
+        IFNULL((
+          SELECT SUM(t.amount_cents)
+          FROM transactions t
+          WHERE t.category_id = c.id
+            AND t.date >= ? AND t.date < ?
+        ), 0) AS total_cents,
+        IFNULL((
+          SELECT COUNT(t.id)
+          FROM transactions t
+          WHERE t.category_id = c.id
+            AND t.date >= ? AND t.date < ?
+        ), 0) AS tx_count,
+        IFNULL((
+          SELECT SUM(t.amount_cents)
+          FROM transactions t
+          WHERE t.category_id = c.id
+            AND t.date >= ? AND t.date < ?
+        ), 0) AS prev_total_cents,
+        (
+          SELECT b.limit_cents
+          FROM budgets b
+          WHERE b.category_id = c.id
+          LIMIT 1
+        ) AS budget_limit_cents
+      FROM categories c
+      $modeFilter
+    ''';
+
+    return _db
+        .customSelect(
+          sql,
+          variables: [
+            Variable.withDateTime(start),
+            Variable.withDateTime(endExclusive),
+            Variable.withDateTime(start),
+            Variable.withDateTime(endExclusive),
+            Variable.withDateTime(prevStart),
+            Variable.withDateTime(prevEndExclusive),
+          ],
+          readsFrom: {_db.categories, _db.transactions, _db.budgets},
+        )
+        .watch()
+        .map((rows) {
+          var grandTotal = 0;
+          final rawItems = <({
+            int id,
+            String name,
+            String icon,
+            int colorValue,
+            String type,
+            int total,
+            int count,
+            int prevTotal,
+            int? budgetLimit,
+          })>[];
+
+          for (final row in rows) {
+            final total = row.read<int>('total_cents');
+            final prevTotal = row.read<int>('prev_total_cents');
+            final budgetLimit = row.readNullable<int>('budget_limit_cents');
+
+            // Only include categories that either have activity this month, last month, or a budget configured
+            if (total == 0 && prevTotal == 0 && budgetLimit == null) continue;
+
+            grandTotal += total.abs();
+            rawItems.add((
+              id: row.read<int>('category_id'),
+              name: row.read<String>('category_name'),
+              icon: row.read<String>('category_icon'),
+              colorValue: row.read<int>('category_color_value'),
+              type: row.read<String>('category_type'),
+              total: total,
+              count: row.read<int>('tx_count'),
+              prevTotal: prevTotal,
+              budgetLimit: budgetLimit,
+            ));
+          }
+
+          rawItems.sort((a, b) {
+            final cmp = b.total.abs().compareTo(a.total.abs());
+            if (cmp != 0) return cmp;
+            return a.name.compareTo(b.name);
+          });
+
+          return [
+            for (final item in rawItems)
+              CategoryAnalysisItem(
+                categoryId: item.id,
+                name: item.name,
+                icon: item.icon,
+                colorValue: item.colorValue,
+                type: item.type,
+                totalCents: item.total,
+                previousMonthTotalCents: item.prevTotal,
+                share: grandTotal == 0 ? 0.0 : item.total.abs() / grandTotal,
+                count: item.count,
+                budgetLimitCents: item.budgetLimit,
+                budgetSpentCents: item.budgetLimit != null ? item.total : null,
+              ),
+          ];
+        });
+  }
+
+  /// In-depth category flow detail for [categoryId] in [month]:
+  /// provides complete breakdown including wallet source flow, 6-month historical trend,
+  /// tag patterns, transaction list, and budget status.
+  Stream<CategoryFlowDetail?> watchCategoryFlowDetail({
+    required int categoryId,
+    required DateTime month,
+  }) {
+    final start = DateTime(month.year, month.month, 1);
+    final endExclusive = DateTime(month.year, month.month + 1, 1);
+    final prevStart = DateTime(month.year, month.month - 1, 1);
+    final prevEndExclusive = start;
+    final trendStart = DateTime(month.year, month.month - 5, 1);
+
+    return _db
+        .customSelect(
+          'SELECT 1',
+          readsFrom: {
+            _db.categories,
+            _db.transactions,
+            _db.accounts,
+            _db.budgets,
+          },
+        )
+        .watch()
+        .asyncMap((_) async {
+          final category = await (_db.select(_db.categories)
+                ..where((c) => c.id.equals(categoryId)))
+              .getSingleOrNull();
+
+          if (category == null) return null;
+
+          final toAccount = _db.accounts.createAlias('to_account');
+          final txRows = await (_db.select(_db.transactions).join([
+            innerJoin(
+              _db.accounts,
+              _db.accounts.id.equalsExp(_db.transactions.accountId),
+            ),
+            leftOuterJoin(
+              toAccount,
+              toAccount.id.equalsExp(_db.transactions.toAccountId),
+            ),
+          ])
+                ..where(
+                  _db.transactions.categoryId.equals(categoryId) &
+                      _db.transactions.date.isBiggerOrEqualValue(start) &
+                      _db.transactions.date.isSmallerThanValue(endExclusive),
+                )
+                ..orderBy([
+                  OrderingTerm.desc(_db.transactions.date),
+                  OrderingTerm.desc(_db.transactions.id),
+                ]))
+              .get();
+
+          var totalCents = 0;
+          final walletTotals = <int, ({String name, int total, int count})>{};
+          final tagTotals = <String, int>{};
+          final tagCounts = <String, int>{};
+          CashflowTransaction? biggestTx;
+          final txList = <CashflowTransaction>[];
+
+          for (final row in txRows) {
+            final tx = row.readTable(_db.transactions);
+            final account = row.readTable(_db.accounts);
+            final dest = row.readTableOrNull(toAccount);
+
+            totalCents += tx.amountCents;
+
+            final currentWallet = walletTotals[account.id];
+            walletTotals[account.id] = (
+              name: account.name,
+              total: (currentWallet?.total ?? 0) + tx.amountCents,
+              count: (currentWallet?.count ?? 0) + 1,
+            );
+
+            if (tx.note != null && tx.note!.isNotEmpty) {
+              for (final match in _tagPattern.allMatches(tx.note!)) {
+                final tag = match.group(1)!;
+                tagTotals[tag] = (tagTotals[tag] ?? 0) + tx.amountCents;
+                tagCounts[tag] = (tagCounts[tag] ?? 0) + 1;
+              }
+            }
+
+            final isTransfer = category.type == 'transfer' ||
+                category.type == 'transfer_in' ||
+                category.type == 'transfer_out';
+            final title = category.type == 'transfer' && dest != null
+                ? 'Transfer dari ${account.name} ke ${dest.name}'
+                : (tx.note != null && tx.note!.isNotEmpty ? tx.note! : category.name);
+
+            final cfTx = CashflowTransaction(
+              id: tx.id,
+              title: title,
+              categoryName: category.name,
+              categoryIcon: category.icon,
+              categoryColorValue: category.colorValue,
+              accountName: account.name,
+              amountCents: tx.amountCents,
+              date: tx.date,
+              isIncome: category.type == 'income' || category.type == 'transfer_in',
+              isTransfer: isTransfer,
+            );
+
+            txList.add(cfTx);
+
+            if (biggestTx == null || tx.amountCents > biggestTx.amountCents) {
+              biggestTx = cfTx;
+            }
+          }
+
+          final prevRow = await _db
+              .customSelect(
+                'SELECT IFNULL(SUM(amount_cents), 0) AS prev_total '
+                'FROM transactions '
+                'WHERE category_id = ? AND date >= ? AND date < ?',
+                variables: [
+                  Variable.withInt(categoryId),
+                  Variable.withDateTime(prevStart),
+                  Variable.withDateTime(prevEndExclusive),
+                ],
+              )
+              .getSingle();
+          final prevTotalCents = prevRow.read<int>('prev_total');
+
+          final grandRow = await _db
+              .customSelect(
+                'SELECT IFNULL(SUM(t.amount_cents), 0) AS grand_total '
+                'FROM transactions t '
+                'INNER JOIN categories c ON c.id = t.category_id '
+                'WHERE c.type = ? AND t.date >= ? AND t.date < ?',
+                variables: [
+                  Variable.withString(category.type),
+                  Variable.withDateTime(start),
+                  Variable.withDateTime(endExclusive),
+                ],
+              )
+              .getSingle();
+          final grandTotalCents = grandRow.read<int>('grand_total');
+
+          final budget = await (_db.select(_db.budgets)
+                ..where((b) => b.categoryId.equals(categoryId)))
+              .getSingleOrNull();
+
+          final walletEntries = walletTotals.entries.toList()
+            ..sort((a, b) => b.value.total.compareTo(a.value.total));
+          final wallets = [
+            for (final entry in walletEntries)
+              CategoryWalletSpending(
+                accountId: entry.key,
+                accountName: entry.value.name,
+                totalCents: entry.value.total,
+                share: totalCents == 0 ? 0.0 : entry.value.total / totalCents,
+                count: entry.value.count,
+              ),
+          ];
+
+          final tagEntries = tagTotals.entries.toList()
+            ..sort((a, b) => b.value.compareTo(a.value));
+          final tags = [
+            for (final entry in tagEntries)
+              TagSpending(
+                tag: entry.key,
+                totalCents: entry.value,
+                share: totalCents == 0 ? 0.0 : entry.value / totalCents,
+                count: tagCounts[entry.key] ?? 0,
+              ),
+          ];
+
+          final trendRows = await (_db.select(_db.transactions)
+                ..where(
+                  (t) =>
+                      t.categoryId.equals(categoryId) &
+                      t.date.isBiggerOrEqualValue(trendStart) &
+                      t.date.isSmallerThanValue(endExclusive),
+                ))
+              .get();
+
+          final monthlyBuckets = <DateTime, int>{};
+          for (final tx in trendRows) {
+            final m = DateTime(tx.date.year, tx.date.month);
+            monthlyBuckets[m] = (monthlyBuckets[m] ?? 0) + tx.amountCents;
+          }
+
+          final monthlyTrends = <CategoryMonthlyTrend>[];
+          for (var i = 5; i >= 0; i--) {
+            final m = DateTime(month.year, month.month - i);
+            monthlyTrends.add(
+              CategoryMonthlyTrend(
+                month: m,
+                totalCents: monthlyBuckets[m] ?? 0,
+              ),
+            );
+          }
+
+          final txCount = txRows.length;
+          final averageCents = txCount == 0 ? 0 : totalCents ~/ txCount;
+          final shareOfTotal = grandTotalCents == 0 ? 0.0 : totalCents / grandTotalCents;
+
+          return CategoryFlowDetail(
+            categoryId: category.id,
+            categoryName: category.name,
+            categoryIcon: category.icon,
+            categoryColorValue: category.colorValue,
+            categoryType: category.type,
+            totalCents: totalCents,
+            previousMonthTotalCents: prevTotalCents,
+            shareOfTotal: shareOfTotal,
+            transactionCount: txCount,
+            averageCents: averageCents,
+            budgetLimitCents: budget?.limitCents,
+            budgetSpentCents: budget != null ? totalCents : null,
+            wallets: wallets,
+            tags: tags,
+            monthlyTrends: monthlyTrends,
+            transactions: txList,
+            biggestTransaction: biggestTx,
+          );
+        });
   }
 }

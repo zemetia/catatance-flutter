@@ -48,6 +48,7 @@ class BudgetItem {
     required this.categoryId,
     required this.name,
     required this.icon,
+    this.color,
     required this.spentCents,
     required this.limitCents,
     required this.carryOverCents,
@@ -61,6 +62,7 @@ class BudgetItem {
   final int categoryId;
   final String name;
   final IconData icon;
+  final Color? color;
   final int spentCents;
   final int limitCents;
   final int carryOverCents;
@@ -131,6 +133,7 @@ BudgetItem _watchBudgetItem(Ref ref, Budget config, DateTime now) {
     categoryId: config.categoryId,
     name: config.categoryName,
     icon: config.iconData,
+    color: config.categoryColor,
     spentCents: spent,
     limitCents: config.limitCents,
     carryOverCents: carryOverCents,

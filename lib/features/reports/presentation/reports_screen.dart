@@ -32,6 +32,12 @@ class ReportsScreen extends ConsumerWidget {
 
     final menuItems = [
       MenuSectionItem(
+        icon: LucideIcons.chart_pie,
+        label: 'Analisis Kategori',
+        description: 'Alur belanja, tren & sumber dana per kategori',
+        onTap: () => context.push('/reports/categories'),
+      ),
+      MenuSectionItem(
         icon: LucideIcons.sparkles,
         label: 'Proyeksi',
         description: 'Skor kesehatan + jatah harian aman',
@@ -92,7 +98,7 @@ class ReportsScreen extends ConsumerWidget {
                 CircleIconButton(
                   icon: LucideIcons.calendar_days,
                   backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-                  onTap: () => _comingSoon(context, 'Pilih tanggal'),
+                  onTap: () => context.push('/reports/kalender-cashflow'),
                 ),
               ],
             ),
@@ -122,7 +128,7 @@ class ReportsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             MenuSection(items: menuItems),
             const SizedBox(height: AppSpacing.md),
-            TopCategoriesCard(onSeeAll: () => _comingSoon(context, 'Semua kategori')),
+            TopCategoriesCard(onSeeAll: () => context.push('/reports/categories')),
             const SizedBox(height: AppSpacing.md),
             SuggestionCard(
               eyebrow: 'Saran untukmu',

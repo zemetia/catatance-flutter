@@ -12,17 +12,41 @@ import '../budget_providers.dart';
 class BudgetProgressCard extends StatelessWidget {
   const BudgetProgressCard({
     required this.budget,
+    this.color,
     this.delay = Duration.zero,
     this.onTap,
     super.key,
   });
 
   final BudgetItem budget;
+  final Color? color;
   final Duration delay;
   final VoidCallback? onTap;
 
+  static const List<Color> _fallbackPalette = [
+    Color(0xFF3B82F6), // Blue
+    Color(0xFFEC4899), // Pink
+    Color(0xFF8B5CF6), // Purple
+    Color(0xFFF97316), // Orange
+    Color(0xFF06B6D4), // Cyan
+    Color(0xFFEAB308), // Amber
+    Color(0xFF10B981), // Emerald
+    Color(0xFF6366F1), // Indigo
+    Color(0xFFF43F5E), // Rose
+    Color(0xFF14B8A6), // Teal
+  ];
+
+  Color get _themeColor {
+    if (color != null) return color!;
+    final c = budget.color;
+    if (c != null && c != Colors.transparent) {
+      return c;
+    }
+    return _fallbackPalette[budget.id.abs() % _fallbackPalette.length];
+  }
+
   Color _statusColor(BuildContext context) => switch (budget.status) {
-    BudgetStatus.safe => AppColors.income,
+    BudgetStatus.safe => _themeColor,
     BudgetStatus.caution => AppColors.warning,
     BudgetStatus.over => AppColors.expense,
   };
@@ -31,26 +55,34 @@ class BudgetProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final themeColor = _themeColor;
     final statusColor = _statusColor(context);
-    final caption = budget.status == BudgetStatus.over
+    final isOver = budget.status == BudgetStatus.over;
+    final cardAccent = isOver ? AppColors.expense : themeColor;
+
+    final caption = isOver
         ? 'Melebihi anggaran • ${budget.periodLabel}'
         : '${formatRupiahCompact(budget.remainingCents)} tersisa • ${budget.periodLabel}';
 
     return AppCard(
       delay: delay,
       onTap: onTap,
-      color: statusColor.withValues(alpha: 0.06),
+      color: cardAccent.withValues(alpha: 0.06),
       backgroundLayers: [
         Positioned(
           right: -28,
           top: -28,
-          child: DecorativeCircle(size: 92, color: statusColor, alpha: 0.08),
+          child: DecorativeCircle(size: 92, color: cardAccent, alpha: 0.08),
         ),
       ],
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconBadge(icon: budget.icon, color: statusColor, shape: BoxShape.rectangle),
+          IconBadge(
+            icon: budget.icon,
+            color: themeColor,
+            shape: BoxShape.rectangle,
+          ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
@@ -70,7 +102,7 @@ class BudgetProgressCard extends StatelessWidget {
                           ),
                           if (budget.carryOverCents > 0) ...[
                             const SizedBox(width: AppSpacing.xs),
-                            Icon(LucideIcons.repeat, size: 13, color: statusColor),
+                            Icon(LucideIcons.repeat, size: 13, color: cardAccent),
                           ],
                         ],
                       ),

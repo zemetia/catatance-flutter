@@ -21,4 +21,10 @@ class Transactions extends Table {
   /// differs from [amountCents] (a cross-currency transfer). Null means
   /// "same as amountCents" — most transfers share one currency.
   IntColumn get toAmountCents => integer().nullable()();
+
+  /// Savings goal an income was earmarked for — lets edit/delete reverse the
+  /// goal's saved amount. Null for everything else (and legacy rows). Not a
+  /// foreign key on purpose: deleting a goal must not be blocked by (or
+  /// cascade into) the income history that fed it.
+  IntColumn get savingsGoalId => integer().nullable()();
 }

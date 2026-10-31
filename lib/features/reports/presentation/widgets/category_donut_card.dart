@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/security/security_providers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -206,6 +207,7 @@ class _DonutBodyState extends State<_DonutBody> {
                   sharePercent: (items[i].share * 100).round(),
                   highlighted: _touchedIndex == i,
                   hideBalance: widget.hideBalance,
+                  onTap: () => context.push('/reports/categories/${items[i].categoryId}'),
                 ),
             ],
           ),
@@ -298,6 +300,7 @@ class _LegendRow extends StatelessWidget {
     required this.sharePercent,
     required this.highlighted,
     required this.hideBalance,
+    this.onTap,
   });
 
   final Color color;
@@ -305,48 +308,53 @@ class _LegendRow extends StatelessWidget {
   final int sharePercent;
   final bool highlighted;
   final bool hideBalance;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              name,
-              style: textTheme.bodyMedium?.copyWith(
-                fontWeight: highlighted ? FontWeight.w700 : FontWeight.w400,
-              ),
-              overflow: TextOverflow.ellipsis,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs, horizontal: 2),
+        child: Row(
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-          ),
-          hideBalance
-              ? HoldToReveal(
-                  builder: (context, revealed) => Text(
-                    revealed ? '$sharePercent%' : '••%',
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                name,
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: highlighted ? FontWeight.w700 : FontWeight.w400,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            hideBalance
+                ? HoldToReveal(
+                    builder: (context, revealed) => Text(
+                      revealed ? '$sharePercent%' : '••%',
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: revealed ? null : scheme.outline,
+                      ),
+                    ),
+                  )
+                : Text(
+                    '$sharePercent%',
                     style: textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: revealed ? null : scheme.outline,
                     ),
                   ),
-                )
-              : Text(
-                  '$sharePercent%',
-                  style: textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-        ],
+          ],
+        ),
       ),
     );
   }

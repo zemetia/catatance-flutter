@@ -49,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
   static const fileBaseName = 'pencatatan_keuangan';
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -213,6 +213,11 @@ class AppDatabase extends _$AppDatabase {
         // Wishlist Anti-Impulsif: cooling-off waiting list to prevent impulse purchases
         await m.createTable(wishlistItems);
         await seedWishlistV18(this);
+      }
+      if (from < 19) {
+        // Transactions remember the savings goal an income was earmarked
+        // for, so editing/deleting that income can reverse the goal too.
+        await m.addColumn(transactions, transactions.savingsGoalId);
       }
     },
     beforeOpen: (OpeningDetails details) async {

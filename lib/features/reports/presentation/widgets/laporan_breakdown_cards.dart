@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
@@ -30,6 +31,7 @@ class LaporanCategoryBreakdownCard extends ConsumerWidget {
         amountCents: item.totalCents,
         share: item.share,
         count: item.count,
+        onTap: () => context.push('/reports/categories/${item.categoryId}'),
       ),
     );
   }
@@ -122,6 +124,7 @@ class _BreakdownRow extends StatelessWidget {
     required this.amountCents,
     required this.share,
     required this.count,
+    this.onTap,
   });
 
   final Color color;
@@ -130,15 +133,19 @@ class _BreakdownRow extends StatelessWidget {
   final int amountCents;
   final double share;
   final int count;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Column(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: 2),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -175,6 +182,7 @@ class _BreakdownRow extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

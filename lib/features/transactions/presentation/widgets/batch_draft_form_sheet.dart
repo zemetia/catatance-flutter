@@ -131,6 +131,7 @@ class _BatchDraftFormSheet extends HookConsumerWidget {
     }
 
     Future<void> pickCategory() async {
+      FocusScope.of(context).unfocus();
       final picked = await showCategoryPickerSheet(
         context,
         categories: currentCategories,
@@ -292,11 +293,7 @@ class _BatchDraftFormSheet extends HookConsumerWidget {
                     color: selectedCategory.value?.color,
                   ),
                   label: Text(
-                    selectedCategory.value != null
-                        ? (selectedCategory.value!.usageCount > 0
-                            ? '${selectedCategory.value!.name} (${selectedCategory.value!.usageCount}x)'
-                            : selectedCategory.value!.name)
-                        : 'Pilih Kategori',
+                    selectedCategory.value?.name ?? 'Pilih Kategori',
                   ),
                   backgroundColor: scheme.surfaceContainerHigh,
                   onPressed: pickCategory,

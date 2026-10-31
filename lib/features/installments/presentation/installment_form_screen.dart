@@ -603,6 +603,7 @@ class InstallmentFormScreen extends HookConsumerWidget {
                         const SizedBox(height: AppSpacing.sm),
                         InkWell(
                           onTap: () async {
+                            FocusScope.of(context).unfocus();
                             final picked =
                                 await showInstallmentCategoryPickerSheet(
                               context,

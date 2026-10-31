@@ -34,29 +34,23 @@ class DashboardScreen extends StatelessWidget {
             FloatingNavBar.clearance,
           ),
           children: const [
-            AnimatedScrollItem(index: 0, child: _DashboardHeaderSection()),
+            _DashboardHeaderSection(),
             SizedBox(height: AppSpacing.lg),
-            AnimatedScrollItem(index: 1, child: _DashboardBalanceSection()),
+            _DashboardBalanceSection(),
             SizedBox(height: AppSpacing.md),
-            AnimatedScrollItem(index: 2, child: _DashboardStatsSection()),
+            _DashboardStatsSection(),
             SizedBox(height: AppSpacing.md),
-            AnimatedScrollItem(index: 3, child: DashboardDebtCard()),
+            DashboardDebtCard(),
             SizedBox(height: AppSpacing.md),
-            AnimatedScrollItem(
-              index: 4,
-              child: SuggestionCard(
-                eyebrow: 'Saran untukmu',
-                title: 'Belum ada budget bulan ini',
-                description:
-                    'Fokuskan pengeluaran rapi — mulai dari 1 budget untuk Lainnya.',
-                icon: LucideIcons.chart_pie,
-              ),
+            SuggestionCard(
+              eyebrow: 'Saran untukmu',
+              title: 'Belum ada budget bulan ini',
+              description:
+                  'Fokuskan pengeluaran rapi — mulai dari 1 budget untuk Lainnya.',
+              icon: LucideIcons.chart_pie,
             ),
-            AnimatedScrollItem(
-              index: 5,
-              child: _DashboardRecentTransactionsSection(),
-            ),
-            AnimatedScrollItem(index: 6, child: _DashboardTipSection()),
+            _DashboardRecentTransactionsSection(),
+            _DashboardTipSection(),
           ],
         ),
       ),

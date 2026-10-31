@@ -64,11 +64,16 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
     final textTheme = Theme.of(context).textTheme;
 
     final cleanQuery = _query.trim().toLowerCase();
-    final filtered = cleanQuery.isEmpty
+    final filtered = (cleanQuery.isEmpty
         ? widget.categories
         : widget.categories
-            .where((c) => c.name.toLowerCase().contains(cleanQuery))
-            .toList();
+            .where((c) => c.name.toLowerCase().contains(cleanQuery)))
+        .toList()
+      ..sort((a, b) {
+        final cmp = b.usageCount.compareTo(a.usageCount);
+        if (cmp != 0) return cmp;
+        return a.name.compareTo(b.name);
+      });
 
     return SafeArea(
       top: false,
@@ -142,127 +147,107 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.55,
-              ),
-              child: filtered.isEmpty
-                  ? Padding(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(LucideIcons.search_x,
-                                size: 36, color: scheme.outline),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              'Tidak ada kategori yang cocok',
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: scheme.outline,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : GridView.builder(
-                      shrinkWrap: true,
-                      itemCount: filtered.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: AppSpacing.sm,
-                        mainAxisSpacing: AppSpacing.sm,
-                        childAspectRatio: 0.85,
-                      ),
-                      itemBuilder: (context, index) {
-                        final cat = filtered[index];
-                        final isSelected = widget.selected?.id == cat.id;
-
-                        return Material(
-                          color: isSelected
-                              ? cat.color.withValues(alpha: 0.16)
-                              : scheme.surfaceContainerHigh,
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusLg),
-                          child: InkWell(
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusLg),
-                            onTap: () => Navigator.of(context).pop(cat),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.xs,
-                                vertical: AppSpacing.xs + 2,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusLg),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? cat.color
-                                      : Colors.transparent,
-                                  width: 1.5,
+            Flexible(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.55,
+                ),
+                child: filtered.isEmpty
+                    ? Padding(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(LucideIcons.search_x,
+                                  size: 36, color: scheme.outline),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                'Tidak ada kategori yang cocok',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: scheme.outline,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 19,
-                                    backgroundColor:
-                                        cat.color.withValues(alpha: 0.2),
-                                    child: Icon(cat.iconData,
-                                        color: cat.color, size: 19),
+                            ],
+                          ),
+                        ),
+                      )
+                    : GridView.builder(
+                        shrinkWrap: true,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        itemCount: filtered.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: AppSpacing.sm,
+                          mainAxisSpacing: AppSpacing.sm,
+                          childAspectRatio: 1.02,
+                        ),
+                        itemBuilder: (context, index) {
+                          final cat = filtered[index];
+                          final isSelected = widget.selected?.id == cat.id;
+
+                          return Material(
+                            color: isSelected
+                                ? cat.color.withValues(alpha: 0.16)
+                                : scheme.surfaceContainerHigh,
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusLg),
+                            child: InkWell(
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusLg),
+                              onTap: () => Navigator.of(context).pop(cat),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.xs,
+                                  vertical: AppSpacing.xs + 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.circular(AppSpacing.radiusLg),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? cat.color
+                                        : Colors.transparent,
+                                    width: 1.5,
                                   ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    cat.name,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: textTheme.labelSmall?.copyWith(
-                                      fontWeight: isSelected
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      color: isSelected
-                                          ? cat.color
-                                          : scheme.onSurface,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor:
+                                          cat.color.withValues(alpha: 0.2),
+                                      child: Icon(cat.iconData,
+                                          color: cat.color, size: 20),
                                     ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 1.5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: cat.usageCount > 0
-                                          ? cat.color.withValues(alpha: 0.14)
-                                          : scheme.surfaceContainerHighest
-                                              .withValues(alpha: 0.5),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '${cat.usageCount}x',
+                                    const SizedBox(height: AppSpacing.xs),
+                                    Text(
+                                      cat.name,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: textTheme.labelSmall?.copyWith(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: cat.usageCount > 0
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        color: isSelected
                                             ? cat.color
-                                            : scheme.outline,
+                                            : scheme.onSurface,
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
+              ),
             ),
           ],
         ),

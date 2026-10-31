@@ -87,54 +87,50 @@ class TransactionListScreen extends ConsumerWidget {
               itemCount: entries.length,
               itemBuilder: (context, index) {
                 final entry = entries[index];
-                return AnimatedScrollItem(
-                  index: index,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          top: AppSpacing.md,
-                          bottom: AppSpacing.xs,
-                          left: AppSpacing.xs,
-                        ),
-                        child: Text(
-                          entry.key,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                color: scheme.outline,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: AppSpacing.md,
+                        bottom: AppSpacing.xs,
+                        left: AppSpacing.xs,
                       ),
-                      AppCard(
-                        enableAnimation: false,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.xs,
-                        ),
-                        child: Column(
-                          children: [
-                            for (var i = 0; i < entry.value.length; i++) ...[
-                              if (i > 0)
-                                Divider(
-                                  height: 1,
-                                  thickness: 1,
-                                  color: scheme.surfaceContainerHighest,
-                                ),
-                              TransactionTile(
-                                key: ValueKey(entry.value[i].id),
+                      child: Text(
+                        entry.key,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: scheme.outline,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                    AppCard(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < entry.value.length; i++) ...[
+                            if (i > 0)
+                              Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: scheme.surfaceContainerHighest,
+                              ),
+                            TransactionTile(
+                              key: ValueKey(entry.value[i].id),
+                              item: entry.value[i],
+                              onTap: () => showTransactionDetailSheet(
+                                context,
                                 item: entry.value[i],
-                                onTap: () => showTransactionDetailSheet(
-                                  context,
-                                  item: entry.value[i],
-                                ),
                               ),
-                            ],
+                            ),
                           ],
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             );

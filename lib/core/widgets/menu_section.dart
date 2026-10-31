@@ -29,7 +29,7 @@ class MenuSection extends StatelessWidget {
     this.title,
     required this.items,
     this.delay = Duration.zero,
-    this.enableAnimation = true,
+    this.enableAnimation = false,
     super.key,
   });
 

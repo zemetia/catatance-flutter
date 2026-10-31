@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pencatatan_keuangan/core/database/app_database.dart';
 import 'package:pencatatan_keuangan/features/transactions/data/transaction_repository.dart';
+import 'package:pencatatan_keuangan/features/transactions/domain/transaction_item.dart';
 import 'package:pencatatan_keuangan/features/transactions/presentation/add_transaction_screen.dart';
 import 'package:pencatatan_keuangan/features/transactions/presentation/transaction_providers.dart';
 import 'package:pencatatan_keuangan/features/transactions/presentation/widgets/budget_info_card.dart';
@@ -374,6 +375,69 @@ void main() {
     expect(find.text(r'$ 0'), findsOneWidget);
     expect(find.text(r'+$10'), findsOneWidget);
     expect(find.text(r'+$50'), findsOneWidget);
+
+    await disposeTester(tester);
+  });
+
+  testWidgets('Editing a transaction rewrites the row and re-balances the wallet',
+      (tester) async {
+    setupViewport(tester);
+
+    late Account wallet;
+    late int id;
+    late TransactionItem item;
+    await tester.runAsync(() async {
+      wallet = (await db.select(db.accounts).get())
+          .firstWhere((a) => a.currencyCode == 'IDR');
+      final expenseCat = await (db.select(db.categories)
+            ..where((c) => c.type.equals('expense')))
+          .get()
+          .then((l) => l.first);
+      await (db.update(db.accounts)..where((a) => a.id.equals(wallet.id)))
+          .write(const AccountsCompanion(initialBalanceCents: Value(1000000)));
+      id = await repository.insert(
+        accountId: wallet.id,
+        categoryId: expenseCat.id,
+        amountCents: 100000,
+        note: 'sebelum diedit',
+        date: DateTime(2026, 10, 1),
+      );
+      item = (await repository.watchRecent(limit: 500).first)
+          .firstWhere((t) => t.id == id);
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          transactionRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(home: AddTransactionScreen(editing: item)),
+      ),
+    );
+    await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 100)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ubah Transaksi'), findsOneWidget);
+    expect(find.text('sebelum diedit'), findsOneWidget);
+
+    // 100.000 + 50.000 = 150.000
+    await tester.tap(find.text('+50rb'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Simpan Perubahan'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 5));
+
+    final row = await tester.runAsync(
+      () => (db.select(db.transactions)..where((t) => t.id.equals(id))).getSingle(),
+    );
+    final account = await tester.runAsync(
+      () => (db.select(db.accounts)..where((a) => a.id.equals(wallet.id))).getSingle(),
+    );
+    expect(row?.amountCents, 150000);
+    expect(row?.note, 'sebelum diedit');
+    // 1.000.000 - 100.000 (insert) -> 900.000, edit to 150.000 -> 850.000
+    expect(account?.initialBalanceCents, 850000);
 
     await disposeTester(tester);
   });

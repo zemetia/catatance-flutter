@@ -80,8 +80,8 @@ class _AnimatedScrollToTopPillState extends State<AnimatedScrollToTopPill> {
           ignoring: !_isVisible,
           child: AnimatedSlide(
             offset: _isVisible ? Offset.zero : const Offset(0, 0.75),
-            duration: const Duration(milliseconds: 320),
-            curve: Curves.easeOutBack,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
             child: AnimatedOpacity(
               opacity: _isVisible ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 240),

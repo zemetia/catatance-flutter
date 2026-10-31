@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -187,6 +188,19 @@ class TransactionDetailSheet extends ConsumerWidget {
 
             const SizedBox(height: AppSpacing.lg),
 
+            FilledButton.icon(
+              icon: const Icon(LucideIcons.pencil, size: 18),
+              label: const Text('Ubah Transaksi'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+              onPressed: () => _handleEdit(context, ref),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+
             // Delete action button
             OutlinedButton.icon(
               icon: const Icon(LucideIcons.trash, color: Colors.red, size: 18),
@@ -212,7 +226,43 @@ class TransactionDetailSheet extends ConsumerWidget {
     );
   }
 
+  Future<void> _handleEdit(BuildContext context, WidgetRef ref) async {
+    final repo = ref.read(transactionRepositoryProvider);
+    final router = GoRouter.of(context);
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final lockReason = await repo.lockReason(item.id);
+    if (!context.mounted) return;
+
+    // Transfers and payments owned by Cicilan / Utang / Patungan move money
+    // in ways the plain form can't represent — only date & note are safe.
+    if (item.isTransfer || lockReason != null) {
+      final saved = await showDialog<bool>(
+        context: context,
+        builder: (_) => _NoteDateDialog(
+          item: item,
+          reason: lockReason ?? 'transfer',
+          onSave: (note, date) => repo.updateNoteAndDate(
+            id: item.id,
+            note: note,
+            date: date,
+          ),
+        ),
+      );
+      if (saved != true) return;
+      navigator.pop(); // Close detail bottom sheet
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Transaksi diperbarui')),
+      );
+      return;
+    }
+
+    navigator.pop(); // Close detail bottom sheet
+    await router.push('/transactions/edit', extra: item);
+  }
+
   Future<void> _handleDelete(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
@@ -236,21 +286,113 @@ class TransactionDetailSheet extends ConsumerWidget {
 
     if (confirmed != true) return;
 
-    if (context.mounted) {
-      Navigator.of(context).pop(); // Close detail bottom sheet
-    }
+    if (!context.mounted) return;
+    Navigator.of(context).pop(); // Close detail bottom sheet
 
-    await ref.read(transactionRepositoryProvider).delete(item.id);
-    onDeleted?.call();
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    try {
+      await ref.read(transactionRepositoryProvider).delete(item.id);
+      onDeleted?.call();
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Transaksi berhasil dihapus'),
           duration: Duration(seconds: 2),
         ),
       );
+    } on StateError catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
     }
+  }
+}
+
+/// Date + note editor for transactions whose money fields are locked
+/// (transfers, and payments owned by Cicilan / Utang & Piutang / Patungan).
+class _NoteDateDialog extends StatefulWidget {
+  const _NoteDateDialog({
+    required this.item,
+    required this.reason,
+    required this.onSave,
+  });
+
+  final TransactionItem item;
+  final String reason;
+  final Future<void> Function(String? note, DateTime date) onSave;
+
+  @override
+  State<_NoteDateDialog> createState() => _NoteDateDialogState();
+}
+
+class _NoteDateDialogState extends State<_NoteDateDialog> {
+  late final TextEditingController _note =
+      TextEditingController(text: widget.item.note);
+  late DateTime _date = widget.item.date;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final info = widget.reason == 'transfer'
+        ? 'Nominal & dompet transfer tidak bisa diubah. Hapus lalu buat transfer baru jika perlu.'
+        : 'Transaksi ini bagian dari ${widget.reason}, jadi nominal, dompet, dan kategori diubah dari menu terkait.';
+    return AlertDialog(
+      title: const Text('Ubah Tanggal & Catatan'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(info, style: TextStyle(color: scheme.outline)),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _note,
+            maxLines: 2,
+            minLines: 1,
+            decoration: const InputDecoration(labelText: 'Catatan'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton.icon(
+            icon: const Icon(LucideIcons.calendar, size: 16),
+            label: Text(formatDateMedium(_date)),
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _date,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+              );
+              if (picked != null) {
+                setState(() {
+                  _date = DateTime(
+                    picked.year,
+                    picked.month,
+                    picked.day,
+                    _date.hour,
+                    _date.minute,
+                  );
+                });
+              }
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: () async {
+            final text = _note.text.trim();
+            await widget.onSave(text.isEmpty ? null : text, _date);
+            if (context.mounted) Navigator.of(context).pop(true);
+          },
+          child: const Text('Simpan'),
+        ),
+      ],
+    );
   }
 }
 

@@ -259,6 +259,7 @@ class BudgetFormScreen extends HookConsumerWidget {
                   const SizedBox(height: AppSpacing.xs),
                   InkWell(
                     onTap: () async {
+                      FocusScope.of(context).unfocus();
                       final picked = await showBudgetCategoryPickerSheet(
                         context,
                         categories: expenseCategories,

@@ -18,6 +18,8 @@ import '../../categories/domain/category_item.dart';
 import '../../categories/presentation/category_providers.dart';
 import '../../savings_goals/presentation/savings_goal_providers.dart';
 import '../../split_bills/presentation/split_bill_form_screen.dart';
+import '../domain/transaction_item.dart';
+import 'add_transaction_prefill.dart';
 import 'transaction_providers.dart';
 import 'widgets/budget_info_card.dart';
 import 'widgets/category_picker_sheet.dart';
@@ -42,7 +44,16 @@ import 'widgets/voice_input_sheet.dart';
 ///   - Tag (Multi-tag selector & chip manager)
 ///   - Budget (Live budget status if selected category is budgeted)
 class AddTransactionScreen extends HookConsumerWidget {
-  const AddTransactionScreen({super.key});
+  const AddTransactionScreen({super.key, this.prefill, this.editing});
+
+  /// Pre-selected day and wallet (e.g. opened from a calendar day). The
+  /// current time-of-day is kept so same-day entries still sort sensibly.
+  final AddTransactionPrefill? prefill;
+
+  /// When set, the screen edits this existing transaction instead of
+  /// creating a new one; saving reverses its old balance effect and applies
+  /// the new one (see `TransactionRepository.update`).
+  final TransactionItem? editing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,12 +68,21 @@ class AddTransactionScreen extends HookConsumerWidget {
         ref.watch(savingsGoalListProvider).value ?? const <SavingsGoal>[];
 
     // Form states
-    final isExpense = useState(true);
-    final amountDigits = useState('');
+    final editing = this.editing;
+    final isEditing = editing != null;
+    final isExpense = useState(editing == null ? true : !editing.isIncome);
+    final amountDigits =
+        useState(editing == null ? '' : editing.amountCents.toString());
     final userSelectedAccount = useState<Account?>(null);
     final selectedCategory = useState<CategoryItem?>(null);
-    final noteController = useTextEditingController();
-    final selectedDate = useState<DateTime>(DateTime.now());
+    final noteController = useTextEditingController(text: editing?.note);
+    final selectedDate = useState<DateTime>(() {
+      if (editing != null) return editing.date;
+      final now = DateTime.now();
+      final day = prefill?.date;
+      if (day == null) return now;
+      return DateTime(day.year, day.month, day.day, now.hour, now.minute);
+    }());
     final selectedTags = useState<List<String>>([]);
     final selectedGoal = useState<SavingsGoal?>(null);
     final isSubmitting = useState(false);
@@ -76,8 +96,28 @@ class AddTransactionScreen extends HookConsumerWidget {
       return null;
     }, [isExpense.value]);
 
-    // Resolved account: explicit user selection or default account
+    // Editing: the savings goal arrives asynchronously, so restore it once
+    // (a later "Tidak ada" pick must not be overwritten by this).
+    final goalRestored = useState(false);
+    useEffect(() {
+      final goalId = editing?.savingsGoalId;
+      if (goalRestored.value || goalId == null || savingsGoals.isEmpty) {
+        return null;
+      }
+      goalRestored.value = true;
+      selectedGoal.value = savingsGoals.where((g) => g.id == goalId).firstOrNull;
+      return null;
+    }, [savingsGoals]);
+
+    // Resolved account: explicit user selection, the edited transaction's
+    // own wallet, or the default account
     final selectedAccount = userSelectedAccount.value ??
+        (editing == null
+            ? null
+            : accounts.where((a) => a.id == editing.accountId).firstOrNull) ??
+        (prefill?.accountId == null
+            ? null
+            : accounts.where((a) => a.id == prefill!.accountId).firstOrNull) ??
         (accounts.isNotEmpty
             ? (accounts.where((a) => a.isDefault).firstOrNull ?? accounts.first)
             : null);
@@ -123,7 +163,13 @@ class AddTransactionScreen extends HookConsumerWidget {
         if (current == null ||
             (isExpense.value && current.isIncome) ||
             (!isExpense.value && !current.isIncome)) {
-          selectedCategory.value = currentCategories.first;
+          // Editing: start on the transaction's own category.
+          final original = current == null && editing != null
+              ? currentCategories
+                  .where((c) => c.id == editing.categoryId)
+                  .firstOrNull
+              : null;
+          selectedCategory.value = original ?? currentCategories.first;
         }
       }
       return null;
@@ -209,6 +255,7 @@ class AddTransactionScreen extends HookConsumerWidget {
     }
 
     Future<void> pickCategory() async {
+      FocusScope.of(context).unfocus();
       final picked = await showCategoryPickerSheet(
         context,
         categories: currentCategories,
@@ -415,20 +462,35 @@ class AddTransactionScreen extends HookConsumerWidget {
           finalNote = finalNote.isEmpty ? tagString : '$finalNote $tagString';
         }
 
-        await repo.insert(
-          accountId: selectedAccount.id,
-          categoryId: selectedCategory.value!.id,
-          amountCents: amount,
-          note: finalNote.isEmpty ? null : finalNote,
-          date: selectedDate.value,
-          savingsGoalId: !isExpense.value ? selectedGoal.value?.id : null,
-        );
+        final goalId = !isExpense.value ? selectedGoal.value?.id : null;
+        if (editing != null) {
+          await repo.update(
+            id: editing.id,
+            accountId: selectedAccount.id,
+            categoryId: selectedCategory.value!.id,
+            amountCents: amount,
+            note: finalNote.isEmpty ? null : finalNote,
+            date: selectedDate.value,
+            savingsGoalId: goalId,
+          );
+        } else {
+          await repo.insert(
+            accountId: selectedAccount.id,
+            categoryId: selectedCategory.value!.id,
+            amountCents: amount,
+            note: finalNote.isEmpty ? null : finalNote,
+            date: selectedDate.value,
+            savingsGoalId: goalId,
+          );
+        }
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${isExpense.value ? "Pengeluaran" : "Pemasukan"} sebesar ${formatCurrencyInput(amount, currency: currentCurrency)} tersimpan',
+                isEditing
+                    ? 'Transaksi diperbarui, saldo dompet disesuaikan'
+                    : '${isExpense.value ? "Pengeluaran" : "Pemasukan"} sebesar ${formatCurrencyInput(amount, currency: currentCurrency)} tersimpan',
               ),
             ),
           );
@@ -467,7 +529,11 @@ class AddTransactionScreen extends HookConsumerWidget {
           icon: const Icon(LucideIcons.x),
           onPressed: () => context.pop(),
         ),
-        title: Text(isExpense.value ? 'Catat Pengeluaran' : 'Catat Pemasukan'),
+        title: Text(
+          isEditing
+              ? 'Ubah Transaksi'
+              : (isExpense.value ? 'Catat Pengeluaran' : 'Catat Pemasukan'),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -651,14 +717,17 @@ class AddTransactionScreen extends HookConsumerWidget {
 
                         if (isExpense.value) ...[
                           // Patungan (only for Pengeluaran — split-bill
-                          // produces an expense + piutang, not an income)
-                          ActionChip(
-                            avatar: const Icon(LucideIcons.users, size: 16),
-                            label: const Text('Patungan'),
-                            backgroundColor: scheme.surfaceContainerHigh,
-                            onPressed: handleSplitBill,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
+                          // produces an expense + piutang, not an income;
+                          // it would create a new split, so not on edit)
+                          if (!isEditing) ...[
+                            ActionChip(
+                              avatar: const Icon(LucideIcons.users, size: 16),
+                              label: const Text('Patungan'),
+                              backgroundColor: scheme.surfaceContainerHigh,
+                              onPressed: handleSplitBill,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                          ],
                         ] else ...[
                           // Target (only for Pemasukan — links the income
                           // to a savings goal's saved amount)
@@ -850,30 +919,6 @@ class AddTransactionScreen extends HookConsumerWidget {
                                     ],
                                   ),
                                 ),
-                                if (selectedCategory.value != null &&
-                                    selectedCategory.value!.usageCount > 0)
-                                  Container(
-                                    margin: const EdgeInsets.only(right: 6),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: (selectedCategory.value?.color ??
-                                              scheme.primary)
-                                          .withValues(alpha: 0.16),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '${selectedCategory.value!.usageCount}x',
-                                      style: textTheme.labelSmall?.copyWith(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: selectedCategory.value?.color ??
-                                            scheme.primary,
-                                      ),
-                                    ),
-                                  ),
                                 Icon(
                                   LucideIcons.chevron_right,
                                   size: 18,
@@ -897,33 +942,7 @@ class AddTransactionScreen extends HookConsumerWidget {
                           for (final cat in currentCategories.take(5)) ...[
                             ChoiceChip(
                               avatar: Icon(cat.iconData, size: 14, color: cat.color),
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(cat.name),
-                                  if (cat.usageCount > 0) ...[
-                                    const SizedBox(width: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 5,
-                                        vertical: 1,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: cat.color.withValues(alpha: 0.18),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '${cat.usageCount}x',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          color: cat.color,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
+                              label: Text(cat.name),
                               selected: selectedCategory.value?.id == cat.id,
                               onSelected: (selected) {
                                 if (selected) selectedCategory.value = cat;
@@ -989,9 +1008,11 @@ class AddTransactionScreen extends HookConsumerWidget {
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
-                            isExpense.value
-                                ? 'Simpan Pengeluaran (${formatCurrencyInput(amount, currency: currentCurrency)})'
-                                : 'Simpan Pemasukan (${formatCurrencyInput(amount, currency: currentCurrency)})',
+                            isEditing
+                                ? 'Simpan Perubahan (${formatCurrencyInput(amount, currency: currentCurrency)})'
+                                : isExpense.value
+                                    ? 'Simpan Pengeluaran (${formatCurrencyInput(amount, currency: currentCurrency)})'
+                                    : 'Simpan Pemasukan (${formatCurrencyInput(amount, currency: currentCurrency)})',
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ],
